@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FSVisitor
 {
@@ -7,14 +9,23 @@ namespace FSVisitor
     {
         static void Main(string[] args)
         {
-            FileSystemVisitor fileSystemVisitor = new FileSystemVisitor();
+            Func<FileSystemInfo, bool> filterAlgorithm = (FileSystemInfo entity) => entity.Name.Length < 8;
+            FileSystemVisitor fileSystemVisitor = new FileSystemVisitor(filterAlgorithm);
+            
             fileSystemVisitor.Start += ShowOnConsole;
             fileSystemVisitor.Stop += ShowOnConsole;
-            foreach(var entity in fileSystemVisitor.GetDirectoryInnerEntities(@"D:\CDP")){
+            fileSystemVisitor.FileFinded += ShowOnConsole;
+            fileSystemVisitor.DirectoryFinded += ShowOnConsole;
+            fileSystemVisitor.FilterFileFinded += ShowOnConsole;
+            fileSystemVisitor.FilterDirectoryFinded += ShowOnConsole;
+            
+            
+            foreach(var entity in fileSystemVisitor.SearchDirectoryInnerEntities(@"D:\CDP\DOTNET")){
                 System.Console.WriteLine(entity.Name);
             }
         }
 
-        static void ShowOnConsole(string message) => System.Console.WriteLine(message);
+        static void ShowOnConsole(object o, SearchProgressArgs args) => System.Console.WriteLine(args.Message);
+
     }
 }
