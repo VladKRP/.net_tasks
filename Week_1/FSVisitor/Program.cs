@@ -9,7 +9,8 @@ namespace FSVisitor
     {
         static void Main(string[] args)
         {
-            FileSystemVisitor fileSystemVisitor = new FileSystemVisitor((FileSystemInfo info) => (info is FileInfo));
+            Func<FileSystemInfo, bool> filterAlgorithm = (FileSystemInfo info) => info is DirectoryInfo;
+            FileSystemVisitor fileSystemVisitor = new FileSystemVisitor(filterAlgorithm);
 
             fileSystemVisitor.Start += FileSystemVisitor_ShowSearchProgress;
             fileSystemVisitor.Finish += FileSystemVisitor_ShowSearchProgress;
@@ -37,10 +38,10 @@ namespace FSVisitor
 
         private static void FileSystemVisitor_OnEntityFound(object o, EntityFoundArgs args)
         {
-            //if (args.EntityInfo.Name.Equals("F2"))
-            //{
-            //    args.IsCancelled = true;
-            //}
+            if (args.EntityInfo.Name.Equals("F21"))
+            {
+                args.IsCancelled = true;
+            }
             Console.WriteLine(args.Message);
         }
     }

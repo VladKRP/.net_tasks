@@ -28,53 +28,53 @@ namespace FSVisitor
             OnSearchStart(new SearchProgressArgs() { Message = "-> Start <-" });
             foreach (var entity in GetDirectoryInnerEntities(entryDirectoryPath))
                 yield return entity;
-            OnSearchFinish(new SearchProgressArgs() { Message = "-> Stop <-" });
+            OnSearchFinish(new SearchProgressArgs() { Message = "-> Finish <-" });
         }
 
 
         private IEnumerable<FileSystemInfo> GetDirectoryInnerEntities(string entryDirectoryPath)
         {
-            DirectoryInfo entryDirectoryInfo = new DirectoryInfo(entryDirectoryPath);
             bool isCancelled = false;
+            DirectoryInfo entryDirectoryInfo = new DirectoryInfo(entryDirectoryPath); 
             foreach (var entryDirectoryEntity in entryDirectoryInfo.GetFileSystemInfos())
             {
                 if (isCancelled) break;
 
+                EntityFoundArgs entityFoundArgs = new EntityFoundArgs() { EntityInfo = entryDirectoryEntity };
+
                 if (entryDirectoryEntity is DirectoryInfo)
                 {
-                    OnDirectoryFound(new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> Directory found " });
-                    if (FilterAlgorithm(entryDirectoryEntity))
+                    entityFoundArgs.Message = "Directory found";
+                    OnDirectoryFound(entityFoundArgs);
+                    if(FilterAlgorithm(entryDirectoryEntity))
                     {
-                        EntityFoundArgs entityFoundArgs = new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> Directory pass filter" };
+                        entityFoundArgs.Message = "Filtered directory found";
                         OnFilteredDirectoryFound(entityFoundArgs);
-                        if (entityFoundArgs.IsCancelled == true) isCancelled = true;
-                        else
-                        {
-                            yield return entryDirectoryEntity;
-                            foreach (var innerElements in GetDirectoryInnerEntities(entryDirectoryEntity.FullName))
-                                yield return innerElements;
-                            continue;
-                        }
-                        break;
+                        yield return entryDirectoryEntity;
                     }
                 }
                 else
                 {
-                    OnFileFound(new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> File found " });
+                    entityFoundArgs.Message = "File found";
+                    OnFileFound(entityFoundArgs);
                     if (FilterAlgorithm(entryDirectoryEntity))
                     {
-                        EntityFoundArgs entityFoundArgs = new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> File pass filter" };
+                        entityFoundArgs.Message = "Filtered file found";
                         OnFilteredFileFound(entityFoundArgs);
-                        if (entityFoundArgs.IsCancelled == true) isCancelled = true;
-                        else
-                        {
-                            yield return entryDirectoryEntity;
-                            continue;
-                        }
-                        break;
+                        yield return entryDirectoryEntity;
                     }
                 }
+
+                if (entityFoundArgs.IsCancelled) isCancelled = true;
             }
+            if (!isCancelled)
+            {
+                foreach (var entryDirectoryEntity in entryDirectoryInfo.GetDirectories())
+                {
+                    foreach (var entity in GetDirectoryInnerEntities(entryDirectoryEntity.FullName))
+                        yield return entity;
+                }
+            }           
         }
 
         protected virtual void OnSearchStart(SearchProgressArgs args)
@@ -113,5 +113,44 @@ namespace FSVisitor
             temporary?.Invoke(this, args);
         }
 
+
+        //          if (isCancelled) break;
+
+        //                if (entryDirectoryEntity is DirectoryInfo)
+        //                {
+        //                    OnDirectoryFound(new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> Directory found " });
+        //                    if (FilterAlgorithm(entryDirectoryEntity))
+        //                    {
+        //                        EntityFoundArgs entityFoundArgs = new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> Directory pass filter" };
+        //        OnFilteredDirectoryFound(entityFoundArgs);
+        //        yield return entryDirectoryEntity;
+        //                        if (entityFoundArgs.IsCancelled == true) isCancelled = true;
+        //                        else
+        //                        {  
+        //                            foreach (var innerElements in GetDirectoryInnerEntities(entryDirectoryEntity.FullName))
+        //                                yield return innerElements;
+        //                            continue;
+        //                        }
+        //                        break;
+        //                    }
+        //                }
+        //                else
+        //                {
+        //                    OnFileFound(new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> File found " });
+        //                    if (FilterAlgorithm(entryDirectoryEntity))
+        //                    {
+        //                        EntityFoundArgs entityFoundArgs = new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> File pass filter" };
+        //OnFilteredFileFound(entityFoundArgs);
+        //                        if (entityFoundArgs.IsCancelled == true) isCancelled = true;
+        //                        else
+        //                        {
+        //                            yield return entryDirectoryEntity;
+        //                            continue;
+        //                        }
+        //                        break;
+        //                    }
+        //                }
+
     }
 }
+
