@@ -9,23 +9,39 @@ namespace FSVisitor
     {
         static void Main(string[] args)
         {
-            Func<FileSystemInfo, bool> filterAlgorithm = (FileSystemInfo entity) => entity.Name.Length < 8;
-            FileSystemVisitor fileSystemVisitor = new FileSystemVisitor(filterAlgorithm);
-            
-            fileSystemVisitor.Start += ShowOnConsole;
-            fileSystemVisitor.Stop += ShowOnConsole;
-            fileSystemVisitor.FileFinded += ShowOnConsole;
-            fileSystemVisitor.DirectoryFinded += ShowOnConsole;
-            fileSystemVisitor.FilterFileFinded += ShowOnConsole;
-            fileSystemVisitor.FilterDirectoryFinded += ShowOnConsole;
-            
-            
-            foreach(var entity in fileSystemVisitor.SearchDirectoryInnerEntities(@"D:\CDP\DOTNET")){
+            FileSystemVisitor fileSystemVisitor = new FileSystemVisitor((FileSystemInfo info) => (info is FileInfo));
+
+            fileSystemVisitor.Start += FileSystemVisitor_ShowSearchProgress;
+            fileSystemVisitor.Finish += FileSystemVisitor_ShowSearchProgress;
+            fileSystemVisitor.FileFound += FileSystemVisitor_OnEntityFound;
+            fileSystemVisitor.FilterFileFound += FileSystemVisitor_OnEntityFound;
+            fileSystemVisitor.DirectoryFound += FileSystemVisitor_OnEntityFound;
+            fileSystemVisitor.FilterDirectoryFound += FileSystemVisitor_OnEntityFound;
+
+            var currentDirectory = Directory.GetParent(Environment.CurrentDirectory).FullName;
+            var testFolderName = "TestFolder";
+            var testFolderPath = Path.Combine(currentDirectory, testFolderName);
+
+            foreach (var entity in fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath))
+            {
                 System.Console.WriteLine(entity.Name);
             }
+
+            Console.ReadLine();
         }
 
-        static void ShowOnConsole(object o, SearchProgressArgs args) => System.Console.WriteLine(args.Message);
+        private static void FileSystemVisitor_ShowSearchProgress(object o, SearchProgressArgs args)
+        {
+            System.Console.WriteLine(args.Message);
+        }
 
+        private static void FileSystemVisitor_OnEntityFound(object o, EntityFoundArgs args)
+        {
+            //if (args.EntityInfo.Name.Equals("F2"))
+            //{
+            //    args.IsCancelled = true;
+            //}
+            Console.WriteLine(args.Message);
+        }
     }
 }

@@ -2,6 +2,6 @@ namespace FSVisitor
 {
     public class SearchProgressArgs
     {
-        public string Message { get; internal set; }
+        public string Message {get;set;}
     }
 }

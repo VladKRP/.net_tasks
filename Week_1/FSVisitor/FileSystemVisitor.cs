@@ -9,90 +9,107 @@ namespace FSVisitor
     public class FileSystemVisitor
     {
         public Func<FileSystemInfo, bool> FilterAlgorithm { get; private set; }
+
         public event EventHandler<SearchProgressArgs> Start;
-        public event EventHandler<SearchProgressArgs> Stop;
-        public event EventHandler<SearchProgressArgs> FileFinded;
-        public event EventHandler<SearchProgressArgs> DirectoryFinded;
-        public event EventHandler<SearchProgressArgs> FilterFileFinded;
-        public event EventHandler<SearchProgressArgs> FilterDirectoryFinded;
+        public event EventHandler<SearchProgressArgs> Finish;
+
+        public event EventHandler<EntityFoundArgs> FileFound;
+        public event EventHandler<EntityFoundArgs> DirectoryFound;
+        public event EventHandler<EntityFoundArgs> FilterFileFound;
+        public event EventHandler<EntityFoundArgs> FilterDirectoryFound;
 
         public FileSystemVisitor(Func<FileSystemInfo, bool> algorithm = null)
         {
-            FilterAlgorithm = algorithm;
+            FilterAlgorithm = algorithm ?? ((FileSystemInfo entityInfo) => { return true; });
         }
 
         public IEnumerable<FileSystemInfo> SearchDirectoryInnerEntities(string entryDirectoryPath)
         {
-            OnSearchStart(new SearchProgressArgs() { Message = "-> Start searching <-" });
+            OnSearchStart(new SearchProgressArgs() { Message = "-> Start <-" });
             foreach (var entity in GetDirectoryInnerEntities(entryDirectoryPath))
                 yield return entity;
-            OnSearchStop(new SearchProgressArgs() { Message = "-> Stop searching <-" });
+            OnSearchFinish(new SearchProgressArgs() { Message = "-> Stop <-" });
         }
 
 
-        public IEnumerable<FileSystemInfo> GetDirectoryInnerEntities(string entryDirectoryPath)
+        private IEnumerable<FileSystemInfo> GetDirectoryInnerEntities(string entryDirectoryPath)
         {
             DirectoryInfo entryDirectoryInfo = new DirectoryInfo(entryDirectoryPath);
+            bool isCancelled = false;
             foreach (var entryDirectoryEntity in entryDirectoryInfo.GetFileSystemInfos())
             {
+                if (isCancelled) break;
+
                 if (entryDirectoryEntity is DirectoryInfo)
                 {
-                    OnDirectoryFinded(new SearchProgressArgs() { Message = "-> Directory finded " });
+                    OnDirectoryFound(new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> Directory found " });
                     if (FilterAlgorithm(entryDirectoryEntity))
                     {
-                        OnFilteredDirectoryFinded(new SearchProgressArgs() { Message = "-> Directory pass filter" });
-                        System.Threading.Thread.Sleep(1000);
-                        yield return entryDirectoryEntity;
-                        foreach (var innerElements in GetDirectoryInnerEntities(entryDirectoryEntity.FullName))
-                            yield return innerElements;               
+                        EntityFoundArgs entityFoundArgs = new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> Directory pass filter" };
+                        OnFilteredDirectoryFound(entityFoundArgs);
+                        if (entityFoundArgs.IsCancelled == true) isCancelled = true;
+                        else
+                        {
+                            yield return entryDirectoryEntity;
+                            foreach (var innerElements in GetDirectoryInnerEntities(entryDirectoryEntity.FullName))
+                                yield return innerElements;
+                            continue;
+                        }
+                        break;
                     }
                 }
                 else
                 {
-                    OnFileFinded(new SearchProgressArgs() { Message = "-> File finded " });
+                    OnFileFound(new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> File found " });
                     if (FilterAlgorithm(entryDirectoryEntity))
                     {
-                        OnFilteredFileFinded(new SearchProgressArgs() { Message = "-> File pass filter" });
-                        System.Threading.Thread.Sleep(1000);
-                        yield return entryDirectoryEntity;
+                        EntityFoundArgs entityFoundArgs = new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> File pass filter" };
+                        OnFilteredFileFound(entityFoundArgs);
+                        if (entityFoundArgs.IsCancelled == true) isCancelled = true;
+                        else
+                        {
+                            yield return entryDirectoryEntity;
+                            continue;
+                        }
+                        break;
                     }
                 }
             }
         }
-        
+
         protected virtual void OnSearchStart(SearchProgressArgs args)
         {
             var temporary = Start;
             temporary?.Invoke(this, args);
         }
 
-        protected virtual void OnSearchStop(SearchProgressArgs args)
+        protected virtual void OnSearchFinish(SearchProgressArgs args)
         {
-            var temporary = Stop;
+            var temporary = Finish;
             temporary?.Invoke(this, args);
         }
 
-        protected virtual void OnFileFinded(SearchProgressArgs args)
+        protected virtual void OnFileFound(EntityFoundArgs args)
         {
-            var temporary = FileFinded;
+            var temporary = FileFound;
             temporary?.Invoke(this, args);
         }
 
-        protected virtual void OnDirectoryFinded(SearchProgressArgs args)
+        protected virtual void OnDirectoryFound(EntityFoundArgs args)
         {
-            var temporary = DirectoryFinded;
+            var temporary = DirectoryFound;
             temporary?.Invoke(this, args);
         }
 
-        protected virtual void OnFilteredFileFinded(SearchProgressArgs args)
+        protected virtual void OnFilteredFileFound(EntityFoundArgs args)
         {
-            var temporary = FilterFileFinded;
+            var temporary = FilterFileFound;
             temporary?.Invoke(this, args);
         }
 
-        protected virtual void OnFilteredDirectoryFinded(SearchProgressArgs args)
+        protected virtual void OnFilteredDirectoryFound(EntityFoundArgs args)
         {
-            var temporary = FilterDirectoryFinded;
+            var temporary = FilterDirectoryFound;
             temporary?.Invoke(this, args);
         }
 

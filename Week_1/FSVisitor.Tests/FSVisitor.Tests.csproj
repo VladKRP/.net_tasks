@@ -13,4 +13,10 @@
     <DotNetCliToolReference Include="dotnet-xunit" Version="2.3.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="FSVisitor">
+      <HintPath>..\FSVisitor\bin\Debug\netcoreapp2.0\FSVisitor.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>
