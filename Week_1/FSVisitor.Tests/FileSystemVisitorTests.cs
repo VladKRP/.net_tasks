@@ -3,6 +3,7 @@ using System.IO;
 using Xunit;
 using System.Linq;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace FSVisitor.Tests
 {
@@ -42,7 +43,7 @@ namespace FSVisitor.Tests
         public void SearchDirectoryInnerEntities_ReturnCountOfEntities_WithTypeFile()
         {
             fileSystemVisitor = new FileSystemVisitor((FileSystemInfo entityInfo) => entityInfo is FileInfo);
-            Assert.Single(fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath));
+            Assert.Equal(2, fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath).Count());
         }
 
         [Fact]
@@ -55,12 +56,43 @@ namespace FSVisitor.Tests
         [Theory]
         [InlineData("F1", 0)]
         [InlineData("F2",1)]
-        [InlineData("F21", 2)]
+        [InlineData("TextFile21.txt", 4)]
         public void SearchDirectoryInnerEntities_IsDirectoryHasRightName(string expectedName, int index)
         {
             fileSystemVisitor = new FileSystemVisitor();
             Assert.Equal(expectedName, fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath).ElementAtOrDefault(index).Name);
         }
+
+
+        [Fact]
+        public void SearchDirectoryInnerEntities_StartEventInvocationTest()
+        {
+            fileSystemVisitor = new FileSystemVisitor();
+
+            List<string> invokedEvents = new List<string>();
+            fileSystemVisitor.Start += (object o,SearchProgressArgs args) => invokedEvents.Add(args.Message);
+            fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath).ToList();
+
+            Assert.NotEmpty(invokedEvents);
+            Assert.Single(invokedEvents);
+            Assert.Equal("-> Start <-", invokedEvents.FirstOrDefault());
+        }
+
+
+        [Fact]
+        public void SearchDirectoryInnerEntities_FinishEventInvocationTest()
+        {
+            fileSystemVisitor = new FileSystemVisitor();
+
+            List<string> invokedEvents = new List<string>();
+            fileSystemVisitor.Finish += (object o, SearchProgressArgs args) => invokedEvents.Add(args.Message);
+            fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath).ToList();
+
+            Assert.NotEmpty(invokedEvents);
+            Assert.Single(invokedEvents);
+            Assert.Equal("-> Finish <-", invokedEvents.FirstOrDefault());
+        }
+
 
 
         private string GenerateTestDirectoryPath()
