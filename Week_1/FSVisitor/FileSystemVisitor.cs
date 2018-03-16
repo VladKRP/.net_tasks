@@ -112,45 +112,6 @@ namespace FSVisitor
             var temporary = FilterDirectoryFound;
             temporary?.Invoke(this, args);
         }
-
-
-        //          if (isCancelled) break;
-
-        //                if (entryDirectoryEntity is DirectoryInfo)
-        //                {
-        //                    OnDirectoryFound(new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> Directory found " });
-        //                    if (FilterAlgorithm(entryDirectoryEntity))
-        //                    {
-        //                        EntityFoundArgs entityFoundArgs = new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> Directory pass filter" };
-        //        OnFilteredDirectoryFound(entityFoundArgs);
-        //        yield return entryDirectoryEntity;
-        //                        if (entityFoundArgs.IsCancelled == true) isCancelled = true;
-        //                        else
-        //                        {  
-        //                            foreach (var innerElements in GetDirectoryInnerEntities(entryDirectoryEntity.FullName))
-        //                                yield return innerElements;
-        //                            continue;
-        //                        }
-        //                        break;
-        //                    }
-        //                }
-        //                else
-        //                {
-        //                    OnFileFound(new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> File found " });
-        //                    if (FilterAlgorithm(entryDirectoryEntity))
-        //                    {
-        //                        EntityFoundArgs entityFoundArgs = new EntityFoundArgs() { EntityInfo = entryDirectoryInfo, Message = "-> File pass filter" };
-        //OnFilteredFileFound(entityFoundArgs);
-        //                        if (entityFoundArgs.IsCancelled == true) isCancelled = true;
-        //                        else
-        //                        {
-        //                            yield return entryDirectoryEntity;
-        //                            continue;
-        //                        }
-        //                        break;
-        //                    }
-        //                }
-
     }
 }
 
