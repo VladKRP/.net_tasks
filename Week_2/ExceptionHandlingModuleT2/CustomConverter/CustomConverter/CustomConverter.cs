@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.Serialization;
 
 namespace CustomConverter
 {
@@ -22,13 +23,16 @@ namespace CustomConverter
         }
     }
 
-    public class CustomConverterException : Exception
+    [Serializable]
+    public class CustomConverterException : ApplicationException
     {
 
-        public object PassedValue { get; private set; }
+        public string PassedValue { get; private set; }
 
         public CustomConverterException(string message) : base(message) { }
-        public CustomConverterException(object passedValue, string message) : base(message)
+        public CustomConverterException(string message, Exception innerException) : base(message, innerException) { }
+        public CustomConverterException(SerializationInfo serializationInfo, StreamingContext context) : base(serializationInfo, context) { }
+        public CustomConverterException(string passedValue, string message) : base(message)
         {
             PassedValue = passedValue;
         }
