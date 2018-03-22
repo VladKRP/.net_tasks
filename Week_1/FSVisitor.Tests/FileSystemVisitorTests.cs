@@ -4,74 +4,93 @@ using Xunit;
 using System.Linq;
 using System.Diagnostics;
 using System.Collections.Generic;
+using Moq;
+using System.IO.Abstractions.TestingHelpers;
+using System.IO.Abstractions;
+using System.Linq.Expressions;
 
 namespace FSVisitor.Tests
 {
     public class FileSystemVisitorTests
     {
+        private readonly string _entryPath = @"D:\User";
 
-        private readonly string testFolderPath;
-        private FileSystemVisitor fileSystemVisitor;
+        private readonly IFileSystem _fileSystem;
+        private readonly Mock<IFileSystem> _fileSystemMock;
+
+        private readonly DirectoryInfoBase _entryDirectoryInfo;
+
 
         public FileSystemVisitorTests()
         {
-            testFolderPath = GenerateTestDirectoryPath();
+            _entryDirectoryInfo = EntryDirectoryConfigurator.ConfigureEntryDirectoryInfo();
+
+            _fileSystemMock = new Mock<IFileSystem>();
+            _fileSystemMock.Setup(x => x.DirectoryInfo.FromDirectoryName(_entryPath)).Returns(() => _entryDirectoryInfo);
+
+            _fileSystem = _fileSystemMock.Object;
+        }
+
+
+        [Fact]
+        public void SearchDirectoryInnerEntities_ReturnAllEntities()
+        {
+            var fileSystemVisitor = new FileSystemVisitor(_fileSystem);
+
+            var entitiesCount = fileSystemVisitor.SearchDirectoryInnerEntities(_entryPath).Count();
+
+            Assert.Equal(4, entitiesCount);
         }
 
         [Fact]
-        public void SearchDirectoryInnerEntities_ReturnCountOfEntities()
+        public void SearchDirectoryInnerEntities_WithNameLengthMoreThat5Character_Return2Entity()
         {
-            fileSystemVisitor = new FileSystemVisitor();
-            Assert.Equal(5, fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath).Count());
+            var fileSystemVisitor = new FileSystemVisitor(_fileSystem, (FileSystemInfoBase entityInfo) => entityInfo.Name.Length > 5);
+
+            var entitiesCount = fileSystemVisitor.SearchDirectoryInnerEntities(_entryPath).Count();
+
+            Assert.Equal(2, entitiesCount);
+        }
+
+
+        [Fact]
+        public void SearchDirectoryInnerEntities_DirectoryFilter_ReturnDirectories()
+        {
+            var expected = new[] { "Films", "Music" };
+            var fileSystemVisitor = new FileSystemVisitor(_fileSystem, (FileSystemInfoBase entityInfo) => entityInfo is DirectoryInfoBase);
+
+            var directories = fileSystemVisitor.SearchDirectoryInnerEntities(_entryPath).ToArray();
+
+            Assert.NotEmpty(directories);
+            Assert.Equal(expected.Length, directories.Count());
+            for (int i = 0; i < expected.Length; i++)
+                Assert.Equal(expected[i], directories[i].Name);
         }
 
         [Fact]
-        public void SearchDirectoryInnerEntities_ReturnCountOfEntities_WithNameLengthLessThan15()
+        public void SearchDirectoryInnerEntities_FileFilter_ReturnFiles()
         {
-            fileSystemVisitor = new FileSystemVisitor((FileSystemInfo entityInfo) => entityInfo.Name.Length < 15);
-            Assert.Equal(5, fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath).Count());
-        }
+            var expected = new[] { "schedule", "Rick & Morty"  };
+            var fileSystemVisitor = new FileSystemVisitor(_fileSystem, (FileSystemInfoBase entityInfo) => entityInfo is FileInfoBase);
 
-        [Fact]
-        public void SearchDirectoryInnerEntities_ReturnCountOfEntities_StartsFromNameF()
-        {
-            fileSystemVisitor = new FileSystemVisitor((FileSystemInfo entityInfo) => entityInfo.Name.StartsWith("F"));
-            Assert.Equal(3, fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath).Count());
-        }
+            var directories = fileSystemVisitor.SearchDirectoryInnerEntities(_entryPath).ToArray();
 
-        [Fact]
-        public void SearchDirectoryInnerEntities_ReturnCountOfEntities_WithTypeFile()
-        {
-            fileSystemVisitor = new FileSystemVisitor((FileSystemInfo entityInfo) => entityInfo is FileInfo);
-            Assert.Equal(2, fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath).Count());
-        }
-
-        [Fact]
-        public void SearchDirectoryInnerEntities_ReturnCountOfEntities_WithTypeDirectory()
-        {
-            fileSystemVisitor = new FileSystemVisitor((FileSystemInfo entityInfo) => entityInfo is DirectoryInfo);
-            Assert.Equal(3, fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath).Count());
-        }
-
-        [Theory]
-        [InlineData("F1", 0)]
-        [InlineData("F2",1)]
-        [InlineData("TextFile21.txt", 4)]
-        public void SearchDirectoryInnerEntities_IsDirectoryHasRightName(string expectedName, int index)
-        {
-            fileSystemVisitor = new FileSystemVisitor();
-            Assert.Equal(expectedName, fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath).ElementAtOrDefault(index).Name);
+            Assert.NotEmpty(directories);
+            Assert.Equal(expected.Length, directories.Count());
+            for (int i = 0; i < expected.Length; i++)
+                Assert.Equal(expected[i], directories[i].Name);
         }
 
 
         [Fact]
         public void SearchDirectoryInnerEntities_StartEventInvocationTest()
         {
-            fileSystemVisitor = new FileSystemVisitor();
-
             List<string> invokedEvents = new List<string>();
-            fileSystemVisitor.Start += (object o,SearchProgressArgs args) => invokedEvents.Add(args.Message);
-            fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath).ToList();
+            var fileSystemVisitor = new FileSystemVisitor(_fileSystem);
+            fileSystemVisitor.Start += (object o, SearchProgressArgs args) => invokedEvents.Add(args.Message);
+            
+           
+            fileSystemVisitor.SearchDirectoryInnerEntities(_entryPath).ToList();
 
             Assert.NotEmpty(invokedEvents);
             Assert.Single(invokedEvents);
@@ -82,30 +101,130 @@ namespace FSVisitor.Tests
         [Fact]
         public void SearchDirectoryInnerEntities_FinishEventInvocationTest()
         {
-            fileSystemVisitor = new FileSystemVisitor();
-
+            
             List<string> invokedEvents = new List<string>();
+            var fileSystemVisitor = new FileSystemVisitor(_fileSystem);
             fileSystemVisitor.Finish += (object o, SearchProgressArgs args) => invokedEvents.Add(args.Message);
-            fileSystemVisitor.SearchDirectoryInnerEntities(testFolderPath).ToList();
+
+
+            fileSystemVisitor.SearchDirectoryInnerEntities(_entryPath).ToList();
 
             Assert.NotEmpty(invokedEvents);
             Assert.Single(invokedEvents);
             Assert.Equal("-> Finish <-", invokedEvents.FirstOrDefault());
         }
 
-
-
-        private string GenerateTestDirectoryPath()
+        [Fact]
+        public void SearchDirectoryInnerEntities_DirectoryFoundEventInvocationTest()
         {
-            var projectRootPath = GetBackFromDirectory(Environment.CurrentDirectory, 4);
-            return Path.Combine(projectRootPath, "TestFolder");
+            var expectedInvocationAmount = 2;
+            List<string> invokedEvents = new List<string>();
+            var fileSystemVisitor = new FileSystemVisitor(_fileSystem);
+            fileSystemVisitor.DirectoryFound += (object o, EntityFoundArgs args) => invokedEvents.Add(args.Message);
+
+
+            fileSystemVisitor.SearchDirectoryInnerEntities(_entryPath).ToList();
+
+            Assert.NotEmpty(invokedEvents);
+            Assert.Equal(expectedInvocationAmount, invokedEvents.Count());
+            Assert.Equal("Directory found", invokedEvents.FirstOrDefault());
         }
 
-        private string GetBackFromDirectory(string path, int depth)
+        [Fact]
+        public void SearchDirectoryInnerEntities_FileFoundEventInvocationTest()
         {
-            for (int i = 0; i < depth; i++)
-                path = Directory.GetParent(path).FullName;
-            return path;
+            var expectedInvocationAmount = 2;
+            List<string> invokedEvents = new List<string>();
+            var fileSystemVisitor = new FileSystemVisitor(_fileSystem);
+            fileSystemVisitor.FileFound += (object o, EntityFoundArgs args) => invokedEvents.Add(args.Message);
+
+
+            fileSystemVisitor.SearchDirectoryInnerEntities(_entryPath).ToList();
+
+            Assert.NotEmpty(invokedEvents);
+            Assert.Equal(expectedInvocationAmount, invokedEvents.Count());
+            Assert.Equal("File found", invokedEvents.FirstOrDefault());
         }
+
+        [Fact]
+        public void SearchDirectoryInnerEntities_FilteredFileFoundEventInvocationTest()
+        {
+            var expectedInvocationAmount = 1;
+            List<string> invokedEvents = new List<string>();
+            var fileSystemVisitor = new FileSystemVisitor(_fileSystem, (FileSystemInfoBase info) => info is FileInfoBase && info.Extension.Equals("mp4"));
+            fileSystemVisitor.FilterFileFound += (object o, EntityFoundArgs args) => invokedEvents.Add(args.Message);
+
+
+            var files = fileSystemVisitor.SearchDirectoryInnerEntities(_entryPath).ToArray();
+
+            Assert.NotEmpty(invokedEvents);
+            Assert.Equal(expectedInvocationAmount, invokedEvents.Count());
+            Assert.Equal("Filtered file found", invokedEvents.FirstOrDefault());
+            Assert.Equal("Rick & Morty", files[0].Name);
+        }
+
+        [Fact]
+        public void SearchDirectoryInnerEntities_FilteredDirectoryFoundEventInvocationTest()
+        {
+            var expectedInvocationAmount = 1;
+            List<string> invokedEvents = new List<string>();
+            var fileSystemVisitor = new FileSystemVisitor(_fileSystem, (FileSystemInfoBase info) => info.Name.StartsWith("F"));
+            fileSystemVisitor.FilterDirectoryFound += (object o, EntityFoundArgs args) => invokedEvents.Add(args.Message);
+
+
+            var directories =fileSystemVisitor.SearchDirectoryInnerEntities(_entryPath).ToArray();
+
+            Assert.NotEmpty(invokedEvents);
+            Assert.Equal(expectedInvocationAmount, invokedEvents.Count());
+            Assert.Equal("Filtered directory found", invokedEvents.FirstOrDefault());
+            Assert.Equal("Films", directories[0].Name);
+        }
+
+        [Fact]
+        public void SearchDirectoryInnerEntities_CancellationEventTest()
+        {
+            var expectedEntitiesAmount = 3;
+            var fileSystemVisitor = new FileSystemVisitor(_fileSystem);
+            fileSystemVisitor.DirectoryFound += OnEntityFound_CancellWhileNameFound;
+            fileSystemVisitor.FileFound += OnEntityFound_CancellWhileNameFound;
+
+            var entities = fileSystemVisitor.SearchDirectoryInnerEntities(_entryPath).ToArray();
+
+            Assert.NotEmpty(entities);
+            Assert.Equal(expectedEntitiesAmount, entities.Length);
+            Assert.True(!entities.Any(x => x.Name.Equals("Rick & Morty")));
+            
+            void OnEntityFound_CancellWhileNameFound(object o, EntityFoundArgs args)
+            {
+                if (args.EntityInfo.Name.Equals("schedule"))
+                    args.IsCancelled = true;
+            }
+        }
+
+        [Fact]
+        public void SearchDirectoryInnerEntities_ExcludeEntitiesWithReadOnlyAttribute_ExcludeEventTest()
+        {
+            var expectedEntitiesAmount = 3;
+            var fileSystemVisitor = new FileSystemVisitor(_fileSystem);
+            fileSystemVisitor.FileFound += OnEntityFound_ExcludeReadonlyFiles;
+            fileSystemVisitor.DirectoryFound += OnEntityFound_ExcludeReadonlyFiles;
+
+            var entities = fileSystemVisitor.SearchDirectoryInnerEntities(_entryPath).ToArray();
+
+            Assert.NotEmpty(entities);
+            Assert.Equal(expectedEntitiesAmount, entities.Count());
+            Assert.True(!entities.Any(x => x.Attributes.Equals(FileAttributes.ReadOnly)));
+
+            void OnEntityFound_ExcludeReadonlyFiles(object o, EntityFoundArgs args){
+                if (args.EntityInfo is FileInfoBase && args.EntityInfo.Attributes.Equals(FileAttributes.ReadOnly))
+                    args.IsExcluded = true;
+            }
+        }
+
     }
 }
+
+
+
+
+
