@@ -13,7 +13,7 @@ namespace FSVisitor.Tests
 {
     public class FileSystemVisitorTests
     {
-        private readonly string _entryPath = @"D:\User";
+        private const string _entryPath = @"D:\User";
 
         private readonly IFileSystem _fileSystem;
         private readonly Mock<IFileSystem> _fileSystemMock;
