@@ -3,12 +3,16 @@ using System.Linq;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Collections;
+using System.IO.Abstractions;
 
 namespace FSVisitor
 {
     public class FileSystemVisitor
     {
-        public Func<FileSystemInfo, bool> FilterAlgorithm { get; private set; }
+        public Func<FileSystemInfoBase, bool> FilterAlgorithm { get; set; }
+        public IFileSystem FileSystem { get; private set; }
+        
 
         public event EventHandler<SearchProgressArgs> Start;
         public event EventHandler<SearchProgressArgs> Finish;
@@ -18,35 +22,36 @@ namespace FSVisitor
         public event EventHandler<EntityFoundArgs> FilterFileFound;
         public event EventHandler<EntityFoundArgs> FilterDirectoryFound;
 
-        public FileSystemVisitor(Func<FileSystemInfo, bool> algorithm = null)
+        public FileSystemVisitor(IFileSystem fileSystem = null, Func<FileSystemInfoBase, bool> filterAlgorithm = null)
         {
-            FilterAlgorithm = algorithm ?? ((FileSystemInfo entityInfo) => { return true; });
+            FileSystem = fileSystem ?? new FileSystem();
+            FilterAlgorithm = filterAlgorithm;
+           // FilterAlgorithm = filterAlgorithm ?? ((FileSystemInfoBase info) => { return true; });
         }
 
-        public IEnumerable<FileSystemInfo> SearchDirectoryInnerEntities(string entryDirectoryPath)
+        public IEnumerable<FileSystemInfoBase> SearchDirectoryInnerEntities(string entryDirectoryPath)
         {
             OnSearchStart(new SearchProgressArgs() { Message = "-> Start <-" });
-            foreach (var entity in GetDirectoryInnerEntities(entryDirectoryPath))
+            var entryDirectory = FileSystem.DirectoryInfo.FromDirectoryName(entryDirectoryPath);
+            foreach (var entity in GetDirectoryInnerEntities(entryDirectory))
                 yield return entity;
             OnSearchFinish(new SearchProgressArgs() { Message = "-> Finish <-" });
         }
 
-
-        private IEnumerable<FileSystemInfo> GetDirectoryInnerEntities(string entryDirectoryPath)
+        public IEnumerable<FileSystemInfoBase> GetDirectoryInnerEntities(DirectoryInfoBase entryDirectoryInfo)
         {
             bool isCancelled = false;
-            DirectoryInfo entryDirectoryInfo = new DirectoryInfo(entryDirectoryPath); 
             foreach (var entryDirectoryEntity in entryDirectoryInfo.GetFileSystemInfos())
             {
                 if (isCancelled) break;
 
                 EntityFoundArgs entityFoundArgs = new EntityFoundArgs() { EntityInfo = entryDirectoryEntity };
 
-                if (entryDirectoryEntity is DirectoryInfo)
+                if (entryDirectoryEntity is DirectoryInfoBase)
                 {
                     entityFoundArgs.Message = "Directory found";
                     OnDirectoryFound(entityFoundArgs);
-                    if(FilterAlgorithm(entryDirectoryEntity))
+                    if((FilterAlgorithm == null || FilterAlgorithm(entryDirectoryEntity)) && !entityFoundArgs.IsExcluded)
                     {
                         entityFoundArgs.Message = "Filtered directory found";
                         OnFilteredDirectoryFound(entityFoundArgs);
@@ -57,7 +62,7 @@ namespace FSVisitor
                 {
                     entityFoundArgs.Message = "File found";
                     OnFileFound(entityFoundArgs);
-                    if (FilterAlgorithm(entryDirectoryEntity))
+                    if ((FilterAlgorithm == null || FilterAlgorithm(entryDirectoryEntity)) && !entityFoundArgs.IsExcluded)
                     {
                         entityFoundArgs.Message = "Filtered file found";
                         OnFilteredFileFound(entityFoundArgs);
@@ -71,7 +76,7 @@ namespace FSVisitor
             {
                 foreach (var entryDirectoryEntity in entryDirectoryInfo.GetDirectories())
                 {
-                    foreach (var entity in GetDirectoryInnerEntities(entryDirectoryEntity.FullName))
+                    foreach (var entity in GetDirectoryInnerEntities(entryDirectoryEntity))
                         yield return entity;
                 }
             }           
@@ -112,6 +117,35 @@ namespace FSVisitor
             var temporary = FilterDirectoryFound;
             temporary?.Invoke(this, args);
         }
+
     }
 }
 
+
+//Enumerator version
+
+//:IEnumerable<FileSystemInfo>
+
+//public string EntryDirectoryPath { get; set; }
+
+//public FileSystemVisitor(string entryDirectoryPath,IFileSystem fileSystem = null, Func<FileSystemInfo, bool> filterAlgorithm = null)
+//{
+//    EntryDirectoryPath = entryDirectoryPath;
+//    FileSystem = fileSystem ?? new FileSystem();
+//    FilterAlgorithm = filterAlgorithm;
+//}
+
+//public IEnumerator<FileSystemInfo> GetEnumerator()
+//{
+//    //throw new NotImplementedException();
+//    OnSearchStart(new SearchProgressArgs() { Message = "-> Start <-" });
+//    var entryDirectory = FileSystem.DirectoryInfo.FromDirectoryName(EntryDirectoryPath);
+//    foreach (var entity in GetDirectoryInnerEntities(entryDirectory))
+//        yield return entity;
+//    OnSearchFinish(new SearchProgressArgs() { Message = "-> Finish <-" });
+//}
+
+//IEnumerator IEnumerable.GetEnumerator()
+//{
+//    return GetEnumerator();
+//}
