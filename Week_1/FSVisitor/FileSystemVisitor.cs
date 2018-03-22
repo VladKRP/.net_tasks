@@ -10,7 +10,7 @@ namespace FSVisitor
 {
     public class FileSystemVisitor
     {
-        public Func<FileSystemInfoBase, bool> FilterAlgorithm { get; set; }
+        public Func<FileSystemInfoBase, bool> IsFilterAlgorithmPassed { get; set; }
         public IFileSystem FileSystem { get; private set; }
         
 
@@ -25,7 +25,7 @@ namespace FSVisitor
         public FileSystemVisitor(IFileSystem fileSystem = null, Func<FileSystemInfoBase, bool> filterAlgorithm = null)
         {
             FileSystem = fileSystem ?? new FileSystem();
-            FilterAlgorithm = filterAlgorithm;
+            IsFilterAlgorithmPassed = filterAlgorithm;
            // FilterAlgorithm = filterAlgorithm ?? ((FileSystemInfoBase info) => { return true; });
         }
 
@@ -51,7 +51,7 @@ namespace FSVisitor
                 {
                     entityFoundArgs.Message = "Directory found";
                     OnDirectoryFound(entityFoundArgs);
-                    if((FilterAlgorithm == null || FilterAlgorithm(entryDirectoryEntity)) && !entityFoundArgs.IsExcluded)
+                    if((IsFilterAlgorithmPassed == null || IsFilterAlgorithmPassed(entryDirectoryEntity)) && !entityFoundArgs.IsExcluded)
                     {
                         entityFoundArgs.Message = "Filtered directory found";
                         OnFilteredDirectoryFound(entityFoundArgs);
@@ -62,7 +62,7 @@ namespace FSVisitor
                 {
                     entityFoundArgs.Message = "File found";
                     OnFileFound(entityFoundArgs);
-                    if ((FilterAlgorithm == null || FilterAlgorithm(entryDirectoryEntity)) && !entityFoundArgs.IsExcluded)
+                    if ((IsFilterAlgorithmPassed == null || IsFilterAlgorithmPassed(entryDirectoryEntity)) && !entityFoundArgs.IsExcluded)
                     {
                         entityFoundArgs.Message = "Filtered file found";
                         OnFilteredFileFound(entityFoundArgs);
