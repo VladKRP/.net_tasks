@@ -1,5 +1,4 @@
 ﻿using FolderListener.Configurations.FolderListenerRules;
-using FolderListener.Configurations.UICulture;
 using FolderListener.Configurations.WatchFolders;
 using System;
 using System.Collections.Generic;
@@ -17,15 +16,12 @@ namespace FolderListener
 
         public static string DefaultFolderPath { get; private set; }
 
-        public static IEnumerable<UICultureElement> Cultures { get;private set; }
-
         public static IEnumerable<RuleElement> Rules { get; private set; }
 
         static ConfigureProject()
         {
             DefaultFolderPath = GetDefaultFolderPath();
             WatchFoldersPathes = GetWatchFoldersPathes();
-            Cultures = GetAvailableCultures();
             Rules = GetRules();
         }
 
@@ -46,16 +42,6 @@ namespace FolderListener
             {
                 foreach (FolderElement folder in section.Folders)
                     yield return folder.Path;
-            }
-        }
-
-        private static IEnumerable<UICultureElement> GetAvailableCultures()
-        {
-            var section = ConfigurationManager.GetSection("uiCultureConfigurationSection") as UICultureConfigurationSection;
-            if(section != null && section.UICultures != null)
-            {
-                foreach (UICultureElement culture in section.UICultures)
-                    yield return culture;
             }
         }
 

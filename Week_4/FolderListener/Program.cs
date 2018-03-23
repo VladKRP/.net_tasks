@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+using messages = FolderListener.Resources.Messages;
 
 namespace FolderListener
 {
@@ -18,9 +19,8 @@ namespace FolderListener
 
     static void Main(string[] args)
         {
-            //Thread.CurrentThread.CurrentCulture = new CultureInfo("ru-RU");
-            //CultureInfo.CurrentCulture = new CultureInfo("ru-RU");
-            var phrases = ConfigureProject.Cultures.FirstOrDefault(culture => culture.Name.Equals(CultureInfo.CurrentCulture.Name)).Phrases;
+            Thread.CurrentThread.CurrentCulture = new CultureInfo("ru-RU");
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo("ru-RU");
             var fileSystemWatchers = CreateMultipleFileSystemWatcher(ConfigureProject.WatchFoldersPathes);
             while (true)
             {
@@ -60,11 +60,11 @@ namespace FolderListener
                 if (passedRule != null)
                 {
                     
-                    Console.WriteLine("\nFile name match rule: " + passedRule.Template);
+                    Console.WriteLine($"\n{messages.RuleMatched} {passedRule.Template}");
                     try
                     {
                         File.Move(args.FullPath, passedRule.DestinationFolder + $"\\{args.Name}");
-                        Console.WriteLine("Moved to " + passedRule.DestinationFolder);
+                        Console.WriteLine($"{messages.FileMoved} {passedRule.DestinationFolder}");
                     }
                     catch (FileNotFoundException exc)
                     {
@@ -73,11 +73,11 @@ namespace FolderListener
                 }
                 else
                 {
-                    Console.WriteLine("\nRules not matched");
+                    Console.WriteLine($"\n{messages.RuleNotMatched}");
                     try
                     {
                         File.Move(args.FullPath, ConfigureProject.DefaultFolderPath + $"\\{args.Name}");
-                        Console.WriteLine("Moved to " + ConfigureProject.DefaultFolderPath);
+                        Console.WriteLine($"{messages.FileMoved} {ConfigureProject.DefaultFolderPath}");
                     }
                     catch (FileNotFoundException exc)
                     {
