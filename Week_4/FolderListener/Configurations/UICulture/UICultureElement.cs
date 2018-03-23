@@ -16,5 +16,15 @@ namespace FolderListener.Configurations.UICulture
             set { this["name"] = value; }
         }
 
+        [ConfigurationCollection(typeof(PhraseElement), AddItemName = "phrase")]
+        [ConfigurationProperty("phrases")]
+        public PhraseElementCollection Phrases
+        {
+            get
+            {
+                return (PhraseElementCollection)this["phrases"];
+            }
+        }
+
     }
 }
