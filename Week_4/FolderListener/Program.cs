@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace FolderListener
 {
@@ -17,54 +18,73 @@ namespace FolderListener
 
     static void Main(string[] args)
         {
-            //NotifyFilters filter = NotifyFilters.FileName | NotifyFilters.CreationTime;
-            //var fileSystemWatchers = CreateMultipleFileSystemWatcher(ConfigureProject.WatchFoldersPathes, filter);
-            
-            FileSystemWatcher watcher = new FileSystemWatcher(@"D:\CDP\.net_tasks\Week_4\TestFolder\films");
-            watcher.Created += OnCreate;
-            watcher.Renamed += OnRename;
-            watcher.EnableRaisingEvents = true;
+            //Thread.CurrentThread.CurrentCulture = new CultureInfo("ru-RU");
+            //CultureInfo.CurrentCulture = new CultureInfo("ru-RU");
+            var phrases = ConfigureProject.Cultures.FirstOrDefault(culture => culture.Name.Equals(CultureInfo.CurrentCulture.Name)).Phrases;
+            var fileSystemWatchers = CreateMultipleFileSystemWatcher(ConfigureProject.WatchFoldersPathes);
             while (true)
             {
                 
             }
         }
 
-       
-
-        //static IEnumerable<FileSystemWatcher> CreateMultipleFileSystemWatcher(IEnumerable<string> pathes, NotifyFilters filter)
-        //{
-        //    IEnumerable<FileSystemWatcher> fileSystemWatchers = new List<FileSystemWatcher>();
-        //    if(pathes != null && pathes.Count() > 0)
-        //    {
-        //        var watchers = pathes.Where(path => Directory.Exists(path)).Select(path => new FileSystemWatcher(path)).ToArray();
-        //        for (int i = 0; i < fileSystemWatchers.Count();i++)
-        //        {
-        //            watchers[i].NotifyFilter = filter;
-        //            watchers[i].Created += OnCreate;
-        //        }
-        //        fileSystemWatchers = watchers;
-        //    }
-        //    return fileSystemWatchers;
-        //}
+        static IEnumerable<FileSystemWatcher> CreateMultipleFileSystemWatcher(IEnumerable<string> pathes)
+        {
+            IEnumerable<FileSystemWatcher> fileSystemWatchers = new List<FileSystemWatcher>();
+            if (pathes != null && pathes.Count() > 0)
+            {
+                var watchers = pathes.Where(path => Directory.Exists(path)).Select(path => new FileSystemWatcher(path)).ToArray();
+                for (int i = 0; i < watchers.Count(); i++)
+                {
+                    watchers[i].Created += OnCreate;
+                    watchers[i].Renamed += OnRename;
+                    watchers[i].EnableRaisingEvents = true;
+                }
+                fileSystemWatchers = watchers;
+            }
+            return fileSystemWatchers;
+        }
 
         static void OnCreate(object o, FileSystemEventArgs args)
         {
-            Console.WriteLine(args.Name);
+            var entityInfo = new FileInfo(args.FullPath);
+            Console.WriteLine(entityInfo.CreationTime.ToLongDateString());
         }
 
         static void OnRename(object o, FileSystemEventArgs args)
         {
-            Console.WriteLine(args.Name);
-            var passedRule = ConfigureProject.Rules.FirstOrDefault(rule => new Regex(rule.Template).Match(args.Name).Success);
-            if (passedRule != null)
+            var entityInfo = new FileInfo(args.FullPath);
+            if(!entityInfo.Attributes.Equals(FileAttributes.Directory))
             {
-                Console.WriteLine(passedRule.DestinationFolder);
-            }
-            else
-            {
-                Console.WriteLine(ConfigureProject.DefaultFolderPath);
-            }
+                var passedRule = ConfigureProject.Rules.FirstOrDefault(rule => new Regex(rule.Template).Match(args.Name).Success);
+                if (passedRule != null)
+                {
+                    
+                    Console.WriteLine("\nFile name match rule: " + passedRule.Template);
+                    try
+                    {
+                        File.Move(args.FullPath, passedRule.DestinationFolder + $"\\{args.Name}");
+                        Console.WriteLine("Moved to " + passedRule.DestinationFolder);
+                    }
+                    catch (FileNotFoundException exc)
+                    {
+
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("\nRules not matched");
+                    try
+                    {
+                        File.Move(args.FullPath, ConfigureProject.DefaultFolderPath + $"\\{args.Name}");
+                        Console.WriteLine("Moved to " + ConfigureProject.DefaultFolderPath);
+                    }
+                    catch (FileNotFoundException exc)
+                    {
+
+                    }
+                }
+            } 
         }
 
     }

@@ -50,6 +50,8 @@
     <Compile Include="Configurations\FolderListenerRules\ResultFileNameParameters.cs" />
     <Compile Include="Configurations\FolderListenerRules\RuleElement.cs" />
     <Compile Include="Configurations\FolderListenerRules\RuleElementCollection.cs" />
+    <Compile Include="Configurations\UICulture\PhraseElement.cs" />
+    <Compile Include="Configurations\UICulture\PhraseElementCollection.cs" />
     <Compile Include="Configurations\UICulture\UICultureConfigurationSection.cs" />
     <Compile Include="Configurations\UICulture\UICultureElementCollection.cs" />
     <Compile Include="Configurations\WatchFolders\FolderElement.cs" />
