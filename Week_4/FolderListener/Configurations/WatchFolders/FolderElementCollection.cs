@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace FolderListener.Configurations
+namespace FolderListener.Configurations.WatchFolders
 {
     public class FolderElementCollection : ConfigurationElementCollection
     {

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Configuration;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
-namespace FolderListener.Configurations
+namespace FolderListener.Configurations.WatchFolders
 {
     public class FolderElement : ConfigurationElement
     {
@@ -20,6 +22,6 @@ namespace FolderListener.Configurations
             get { return (string)base["path"]; }
             set { this["path"] = value; }
         }
-        
+
     }
 }

@@ -1,20 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace FolderListener.Configurations
+namespace FolderListener.Configurations.UICulture
 {
-    public class RulesElementCollection : ConfigurationElementCollection
+    public class UICultureElementCollection : ConfigurationElementCollection
     {
         protected override ConfigurationElement CreateNewElement()
         {
-            throw new NotImplementedException();
+            return new UICultureElement();
         }
 
         protected override object GetElementKey(ConfigurationElement element)
         {
-            throw new NotImplementedException();
+            return ((UICultureElement)element).Name;
         }
     }
 }
