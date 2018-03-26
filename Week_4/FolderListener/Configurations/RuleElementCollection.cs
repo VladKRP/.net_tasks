@@ -5,18 +5,18 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FolderListener.Configurations.WatchFolders
+namespace FolderListener.Configurations
 {
-    public class FolderElementCollection : ConfigurationElementCollection
+    public class RuleElementCollection : ConfigurationElementCollection
     {
         protected override ConfigurationElement CreateNewElement()
         {
-            return new FolderElement();
+            return new RuleElement();
         }
 
         protected override object GetElementKey(ConfigurationElement element)
         {
-            return ((FolderElement)element).Path;
+            return ((RuleElement)element).Template;
         }
     }
 }

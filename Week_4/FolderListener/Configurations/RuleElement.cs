@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace FolderListener.Configurations.FolderListenerRules
+namespace FolderListener.Configurations
 {
     public class RuleElement:ConfigurationElement
     {
@@ -24,11 +24,16 @@ namespace FolderListener.Configurations.FolderListenerRules
             set { this["destinationFolder"] = value; }
         }
 
-        //[ConfigurationProperty("fileNameChangeRule")]
-        //public ResultFileNameParameters ResultFileName
-        //{
-        //    get { return (ResultFileNameParameters)base["fileNameChangeRule"]; }
-        //    set { this["fileNameChangeRule"] = value; }
-        //}
+        [ConfigurationProperty("nameChangeRule")]
+        public NameChangeRule NameChangeRule
+        {
+            get { return (NameChangeRule)base["nameChangeRule"]; }
+        }
+    }
+
+    public enum NameChangeRule
+    {
+        SerialNumber,
+        LastModifyDate
     }
 }

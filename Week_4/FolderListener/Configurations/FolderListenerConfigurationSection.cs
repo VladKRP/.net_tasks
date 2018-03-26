@@ -5,10 +5,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FolderListener.Configurations.WatchFolders
+namespace FolderListener.Configurations
 {
-    public class WatchFolderConfigurationSection : ConfigurationSection
+    public class FolderListenerConfigurationSection : ConfigurationSection
     {
+
+        [ConfigurationProperty("applicationLanguage")]
+        public string ApplicationLanguage
+        {
+            get { return (string)this["applicationLanguage"]; }
+        }
+
+        [ConfigurationCollection(typeof(RuleElement), AddItemName = "rule")]
+        [ConfigurationProperty("rules")]
+        public RuleElementCollection Rules
+        {
+            get { return (RuleElementCollection)this["rules"]; }
+        }
+
         [ConfigurationCollection(typeof(FolderElement), AddItemName = "folder")]
         [ConfigurationProperty("folders")]
         public FolderElementCollection Folders
@@ -21,5 +35,6 @@ namespace FolderListener.Configurations.WatchFolders
         {
             get { return (FolderElement)this["defaultFolder"]; }
         }
+
     }
 }

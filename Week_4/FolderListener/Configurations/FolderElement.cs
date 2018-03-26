@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FolderListener.Configurations.WatchFolders
+namespace FolderListener.Configurations
 {
     public class FolderElement : ConfigurationElement
     {

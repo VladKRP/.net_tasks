@@ -1,14 +1,9 @@
 ﻿using FolderListener.Configurations;
-using FolderListener.Configurations.WatchFolders;
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Globalization;
 using messages = FolderListener.Resources.Messages;
 
@@ -17,15 +12,15 @@ namespace FolderListener
     class Program
     {
 
-    static void Main(string[] args)
+        static void Main(string[] args)
         {
-            Thread.CurrentThread.CurrentCulture = new CultureInfo("ru-RU");
-            Thread.CurrentThread.CurrentUICulture = new CultureInfo("ru-RU");
-            var fileSystemWatchers = CreateMultipleFileSystemWatcher(ConfigureProject.WatchFoldersPathes);
-            while (true)
-            {
-                
-            }
+            var culture = new CultureInfo(FolderListenerConfigurations.Culture);
+
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+            var fileSystemWatchers = CreateMultipleFileSystemWatcher(FolderListenerConfigurations.WatchFoldersPathes);
+            while (true){}
         }
 
         static IEnumerable<FileSystemWatcher> CreateMultipleFileSystemWatcher(IEnumerable<string> pathes)
@@ -48,43 +43,84 @@ namespace FolderListener
         static void OnCreate(object o, FileSystemEventArgs args)
         {
             var entityInfo = new FileInfo(args.FullPath);
-            Console.WriteLine(entityInfo.CreationTime.ToLongDateString());
+            Console.WriteLine($"\n{messages.FileCreated}\n{messages.FileName}:{entityInfo.Name}\n{messages.FileCreationDate}:{entityInfo.CreationTime}");
+            if (!entityInfo.Attributes.Equals(FileAttributes.Directory))
+            {
+                var passedRule = FolderListenerConfigurations.Rules.FirstOrDefault(rule => new Regex(rule.Template).Match(args.Name).Success);
+                if (passedRule != null)
+                    MoveFileToSpecificFolder(entityInfo, passedRule);
+                else
+                    MoveFileToDefaultFolder(entityInfo);
+            }
         }
 
         static void OnRename(object o, FileSystemEventArgs args)
         {
             var entityInfo = new FileInfo(args.FullPath);
-            if(!entityInfo.Attributes.Equals(FileAttributes.Directory))
+        }
+
+        static void MoveFileToSpecificFolder(FileInfo fileInfo, RuleElement rule)
+        {
+            CreateDirectoryIfNotExist(rule.DestinationFolder);
+
+            Console.WriteLine($"\n{messages.RuleMatched} {rule.Template}\n");
+
+            try
             {
-                var passedRule = ConfigureProject.Rules.FirstOrDefault(rule => new Regex(rule.Template).Match(args.Name).Success);
-                if (passedRule != null)
-                {
-                    
-                    Console.WriteLine($"\n{messages.RuleMatched} {passedRule.Template}");
-                    try
-                    {
-                        File.Move(args.FullPath, passedRule.DestinationFolder + $"\\{args.Name}");
-                        Console.WriteLine($"{messages.FileMoved} {passedRule.DestinationFolder}");
-                    }
-                    catch (FileNotFoundException exc)
-                    {
+                DirectoryInfo directory = new DirectoryInfo(rule.DestinationFolder);
+                var resultFileName = ChangeResultFileName(fileInfo, rule);
+                File.Move(fileInfo.FullName, rule.DestinationFolder + $"\\{resultFileName}");
+                Console.WriteLine($"{messages.FileMoved} {rule.DestinationFolder}");
+            }
+            catch (FileNotFoundException exc)
+            {
 
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"\n{messages.RuleNotMatched}");
-                    try
-                    {
-                        File.Move(args.FullPath, ConfigureProject.DefaultFolderPath + $"\\{args.Name}");
-                        Console.WriteLine($"{messages.FileMoved} {ConfigureProject.DefaultFolderPath}");
-                    }
-                    catch (FileNotFoundException exc)
-                    {
+            }
+            catch(IOException exc)
+            {
+                Console.WriteLine("Exception");
+            }
+        }
 
-                    }
-                }
-            } 
+        static void MoveFileToDefaultFolder(FileInfo fileInfo)
+        {
+            CreateDirectoryIfNotExist(FolderListenerConfigurations.DefaultFolderPath);
+
+            Console.WriteLine($"\n{messages.RuleNotMatched}");
+
+            try
+            {
+                File.Move(fileInfo.FullName, FolderListenerConfigurations.DefaultFolderPath + $"\\{fileInfo.Name}");
+                Console.WriteLine($"{messages.FileMoved} {FolderListenerConfigurations.DefaultFolderPath}");
+            }
+            catch (FileNotFoundException exc)
+            {
+
+            }
+            catch (IOException exc)
+            {
+                Console.WriteLine("Exception");
+            }
+        }
+
+        static void CreateDirectoryIfNotExist(string path)
+        {
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+        }
+
+        static string ChangeResultFileName(FileInfo fileInfo, RuleElement rule)
+        {
+            string resultFileName = fileInfo.Name.Replace(fileInfo.Extension, "");
+            if(rule != null)
+            {
+                if (rule.NameChangeRule.Equals(NameChangeRule.LastModifyDate))
+                    resultFileName += DateTime.Now.ToShortDateString();
+                else if (rule.NameChangeRule.Equals(NameChangeRule.SerialNumber))
+                    throw new NotImplementedException();
+            }
+            resultFileName += fileInfo.Extension;
+            return resultFileName;
         }
 
     }
