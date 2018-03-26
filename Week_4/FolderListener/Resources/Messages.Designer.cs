@@ -61,11 +61,65 @@ namespace FolderListener.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change file name rules.
+        /// </summary>
+        internal static string FileChangeRules {
+            get {
+                return ResourceManager.GetString("FileChangeRules", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File was created.
+        /// </summary>
+        internal static string FileCreated {
+            get {
+                return ResourceManager.GetString("FileCreated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creation date.
+        /// </summary>
+        internal static string FileCreationDate {
+            get {
+                return ResourceManager.GetString("FileCreationDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Is last moving date enabled in file name?.
+        /// </summary>
+        internal static string FileLastMovingDate {
+            get {
+                return ResourceManager.GetString("FileLastMovingDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to File was moved.
         /// </summary>
         internal static string FileMoved {
             get {
                 return ResourceManager.GetString("FileMoved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        internal static string FileName {
+            get {
+                return ResourceManager.GetString("FileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Is serial number in name enabled?.
+        /// </summary>
+        internal static string FileSerialNumber {
+            get {
+                return ResourceManager.GetString("FileSerialNumber", resourceCulture);
             }
         }
         

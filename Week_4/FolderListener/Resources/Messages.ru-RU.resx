@@ -109,4 +109,22 @@
   <data name="FileMoved" xml:space="preserve">
     <value>Файл был перемещен</value>
   </data>
+  <data name="FileCreationDate" xml:space="preserve">
+    <value>Дата создания файла</value>
+  </data>
+  <data name="FileName" xml:space="preserve">
+    <value>Имя файла</value>
+  </data>
+  <data name="FileCreated" xml:space="preserve">
+    <value>Новый файл был создан</value>
+  </data>
+  <data name="FileChangeRules" xml:space="preserve">
+    <value>Правила изменения названия файла</value>
+  </data>
+  <data name="FileSerialNumber" xml:space="preserve">
+    <value>Добавлять порядковый номер  к названию файла?</value>
+  </data>
+  <data name="FileLastMovingDate" xml:space="preserve">
+    <value>Добавлять дату изменения к названию файла?</value>
+  </data>
 </root>

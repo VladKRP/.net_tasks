@@ -117,8 +117,26 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="FileChangeRules" xml:space="preserve">
+    <value>Change file name rules</value>
+  </data>
+  <data name="FileCreated" xml:space="preserve">
+    <value>File was created</value>
+  </data>
+  <data name="FileCreationDate" xml:space="preserve">
+    <value>Creation date</value>
+  </data>
+  <data name="FileLastMovingDate" xml:space="preserve">
+    <value>Is last moving date enabled in file name?</value>
+  </data>
   <data name="FileMoved" xml:space="preserve">
     <value>File was moved</value>
+  </data>
+  <data name="FileName" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="FileSerialNumber" xml:space="preserve">
+    <value>Is serial number in name enabled?</value>
   </data>
   <data name="NewFileFound" xml:space="preserve">
     <value>New file found</value>
