@@ -160,7 +160,7 @@ namespace SampleQueries
                                                                                                  .Select(gcuProduct => new
                                                                                                  {
                                                                                                      IsInStock = gcuProduct.Key,
-                                                                                                     productsByPrice = gcuProduct.GroupBy(p => p.UnitPrice)
+                                                                                                     productsByPrice = gcuProduct.OrderBy(p => p.UnitPrice)
                                                                                                  })
                                                                });
             ObjectDumper.Write(groupedByCategoryProducts, 3);
