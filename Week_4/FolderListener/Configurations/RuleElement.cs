@@ -14,14 +14,12 @@ namespace FolderListener.Configurations
         public string Template
         {
             get { return (string)base["template"]; }
-            set { this["template"] = value; }
         }
 
         [ConfigurationProperty("destinationFolder", IsRequired = true)]
         public string DestinationFolder
         {
             get { return (string)base["destinationFolder"]; }
-            set { this["destinationFolder"] = value; }
         }
 
         [ConfigurationProperty("nameChangeRule")]

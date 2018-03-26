@@ -47,7 +47,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Configurations\FolderListenerConfigurationSection.cs" />
-    <Compile Include="Configurations\NameChangeRuleElement.cs" />
     <Compile Include="Configurations\RuleElement.cs" />
     <Compile Include="Configurations\RuleElementCollection.cs" />
     <Compile Include="Configurations\FolderElement.cs" />

@@ -13,14 +13,12 @@ namespace FolderListener.Configurations
         public string Name
         {
             get { return (string)base["name"]; }
-            set { this["name"] = value; }
         }
 
         [ConfigurationProperty("path", Options = ConfigurationPropertyOptions.IsKey | ConfigurationPropertyOptions.IsRequired)]
         public string Path
         {
             get { return (string)base["path"]; }
-            set { this["path"] = value; }
         }
 
     }
