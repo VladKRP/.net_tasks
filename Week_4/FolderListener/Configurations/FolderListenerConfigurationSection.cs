@@ -10,7 +10,7 @@ namespace FolderListener.Configurations
     public class FolderListenerConfigurationSection : ConfigurationSection
     {
 
-        [ConfigurationProperty("applicationLanguage")]
+        [ConfigurationProperty("applicationLanguage", DefaultValue = "en-US")]
         public string ApplicationLanguage
         {
             get { return (string)this["applicationLanguage"]; }

@@ -74,11 +74,11 @@ namespace FolderListener
             }
             catch (FileNotFoundException exc)
             {
-
+                Console.WriteLine(exc.Message);
             }
             catch(IOException exc)
             {
-                Console.WriteLine("Exception");
+                Console.WriteLine(exc.Message);
             }
         }
 
@@ -95,11 +95,11 @@ namespace FolderListener
             }
             catch (FileNotFoundException exc)
             {
-
+                Console.WriteLine(exc.Message);
             }
             catch (IOException exc)
             {
-                Console.WriteLine("Exception");
+                Console.WriteLine(exc.Message);
             }
         }
 
