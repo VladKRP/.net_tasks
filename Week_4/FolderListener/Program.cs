@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Globalization;
 using messages = FolderListener.Resources.Messages;
+using System.Threading;
 
 namespace FolderListener
 {
@@ -31,8 +32,7 @@ namespace FolderListener
                 var watchers = pathes.Where(path => Directory.Exists(path)).Select(path => new FileSystemWatcher(path)).ToArray();
                 for (int i = 0; i < watchers.Count(); i++)
                 {
-                    watchers[i].Created += OnCreate;
-                    watchers[i].Renamed += OnRename;
+                    watchers[i].Changed += OnChange;
                     watchers[i].EnableRaisingEvents = true;
                 }
                 fileSystemWatchers = watchers;
@@ -40,7 +40,7 @@ namespace FolderListener
             return fileSystemWatchers;
         }
 
-        static void OnCreate(object o, FileSystemEventArgs args)
+        static void OnChange(object o, FileSystemEventArgs args)
         {
             var entityInfo = new FileInfo(args.FullPath);
             Console.WriteLine($"\n{messages.FileCreated}\n{messages.FileName}:{entityInfo.Name}\n{messages.FileCreationDate}:{entityInfo.CreationTime}");
@@ -48,54 +48,30 @@ namespace FolderListener
             {
                 var passedRule = FolderListenerConfigurations.Rules.FirstOrDefault(rule => new Regex(rule.Template).Match(args.Name).Success);
                 if (passedRule != null)
-                    MoveFileToSpecificFolder(entityInfo, passedRule);
+                    MoveFileAccordingRules(entityInfo, passedRule, ChangeResultFileName);
                 else
-                    MoveFileToDefaultFolder(entityInfo);
+                    MoveFileAccordingRules(entityInfo, changeFileNameFunc: ChangeResultFileName);
             }
         }
 
-        static void OnRename(object o, FileSystemEventArgs args)
+        static void MoveFileAccordingRules(FileInfo fileInfo, RuleElement rule = null, Func<FileInfo, RuleElement, string> changeFileNameFunc = null)
         {
-            var entityInfo = new FileInfo(args.FullPath);
-        }
+            var destinationFolder = FolderListenerConfigurations.DefaultFolderPath;
+            if (rule == null) Console.WriteLine($"\n{messages.RuleNotMatched}");
+            else
+            {
+                Console.WriteLine($"\n{messages.RuleMatched} {rule.Template}\n");
+                destinationFolder = rule.DestinationFolder;
+            }
 
-        static void MoveFileToSpecificFolder(FileInfo fileInfo, RuleElement rule)
-        {
-            CreateDirectoryIfNotExist(rule.DestinationFolder);
-
-            Console.WriteLine($"\n{messages.RuleMatched} {rule.Template}\n");
+            if (!Directory.Exists(destinationFolder))
+                Directory.CreateDirectory(destinationFolder);
 
             try
             {
-                DirectoryInfo directory = new DirectoryInfo(rule.DestinationFolder);
-                var resultFileName = ChangeResultFileName(fileInfo, rule);
-                File.Move(fileInfo.FullName, rule.DestinationFolder + $"\\{resultFileName}");
-                Console.WriteLine($"{messages.FileMoved} {rule.DestinationFolder}");
-            }
-            catch (FileNotFoundException exc)
-            {
-                Console.WriteLine(exc.Message);
-            }
-            catch(IOException exc)
-            {
-                Console.WriteLine(exc.Message);
-            }
-        }
-
-        static void MoveFileToDefaultFolder(FileInfo fileInfo)
-        {
-            CreateDirectoryIfNotExist(FolderListenerConfigurations.DefaultFolderPath);
-
-            Console.WriteLine($"\n{messages.RuleNotMatched}");
-
-            try
-            {
-                File.Move(fileInfo.FullName, FolderListenerConfigurations.DefaultFolderPath + $"\\{fileInfo.Name}");
-                Console.WriteLine($"{messages.FileMoved} {FolderListenerConfigurations.DefaultFolderPath}");
-            }
-            catch (FileNotFoundException exc)
-            {
-                Console.WriteLine(exc.Message);
+                var resultFileName = changeFileNameFunc != null ? changeFileNameFunc(fileInfo, rule) : fileInfo.Name;
+                File.Move(fileInfo.FullName, destinationFolder + $"\\{resultFileName}");
+                Console.WriteLine($"{messages.FileMoved} {destinationFolder}");
             }
             catch (IOException exc)
             {
@@ -103,24 +79,62 @@ namespace FolderListener
             }
         }
 
-        static void CreateDirectoryIfNotExist(string path)
+        static string ChangeResultFileName(FileInfo fileInfo, RuleElement rule = null)
         {
-            if (!Directory.Exists(path))
-                Directory.CreateDirectory(path);
+            DirectoryInfo destinationFolder; 
+            var fileName = new Regex(@"\(\d+\)").Replace(fileInfo.Name, "");
+            fileName = Path.GetFileNameWithoutExtension(fileName);
+
+            if (rule != null)
+            {
+                destinationFolder = new DirectoryInfo(rule.DestinationFolder); 
+                if (rule.NameChangeRule.Equals(NameChangeRule.LastModifyDate))
+                    fileName += $" {DateTime.Now.ToShortDateString()}";
+                else if (rule.NameChangeRule.Equals(NameChangeRule.SerialNumber))
+                    fileName = $"{GetNextSerialNumberInFolder(destinationFolder)}." + fileName;
+            }
+            else destinationFolder = new DirectoryInfo(FolderListenerConfigurations.DefaultFolderPath);
+
+            var maxIndex = GetMaxIndexOfSameNameFileInFolder(fileName, destinationFolder);
+            fileName += (maxIndex != null ? $"({maxIndex})" : "") + fileInfo.Extension;
+
+            return fileName;
         }
 
-        static string ChangeResultFileName(FileInfo fileInfo, RuleElement rule)
+        static int GetNextSerialNumberInFolder(DirectoryInfo destinationFolder)
         {
-            string resultFileName = fileInfo.Name.Replace(fileInfo.Extension, "");
-            if(rule != null)
-            {
-                if (rule.NameChangeRule.Equals(NameChangeRule.LastModifyDate))
-                    resultFileName += DateTime.Now.ToShortDateString();
-                else if (rule.NameChangeRule.Equals(NameChangeRule.SerialNumber))
-                    throw new NotImplementedException();
-            }
-            resultFileName += fileInfo.Extension;
-            return resultFileName;
+            int nextSerialNumber = 1;
+
+            var serialNumberRegExp = new Regex(@"^\d*[.]");
+            var serialNumberExtractingRegExp = new Regex(@"(^\d*)");
+
+            var folderFilesSerialNumbers = destinationFolder.GetFiles()
+                                    .Where(file => serialNumberRegExp.Match(file.Name).Success)
+                                    .Select(file => serialNumberExtractingRegExp.Match(file.Name).Value)
+                                    .Where(snumber => snumber.All(c => char.IsDigit(c)))
+                                    .Select(snumber => int.Parse(snumber));
+
+            if (folderFilesSerialNumbers.Count() > 0)
+                nextSerialNumber = folderFilesSerialNumbers.Max() + 1;
+
+            return nextSerialNumber;
+        }
+
+        static int? GetMaxIndexOfSameNameFileInFolder(string filename, DirectoryInfo destinationFolder)
+        {
+            int? maxIndex = null;
+            var indexRegExp = new Regex(@"\((\d*)\)");
+            var sameNameFiles = destinationFolder.GetFiles().Where(file => file.Name.Contains(filename));
+
+            var sameNameFilesIndexes = sameNameFiles.Select(file => indexRegExp.Match(file.Name).Groups[1]?.Value)
+                                                               .Where(index => !string.IsNullOrWhiteSpace(index) && index.All(x => char.IsDigit(x)))
+                                                               .Select(index => int.Parse(index));
+            if (sameNameFilesIndexes.Count() > 0)
+                maxIndex = sameNameFilesIndexes.Max();
+            else if (sameNameFiles.Count() > sameNameFilesIndexes.Count())
+                maxIndex = 1;
+
+            return maxIndex;
         }
 
     }
