@@ -10,6 +10,11 @@ using FolderListener.Extensions;
 
 namespace FolderListener
 {
+    public class FileListenerArgs : EventArgs
+    {
+        public string Message { get; set; }
+    }
+
     public class FolderListener
     {
         private IFileSystem _fileSystem;
@@ -19,6 +24,12 @@ namespace FolderListener
         private readonly FolderListenerConfigurationSection _folderListenerConfigurations;
 
         private readonly FileNameManager _fileNameManager;
+
+        public EventHandler<FileListenerArgs> FileCreated;
+        public EventHandler<FileListenerArgs> FileMoved;
+        public EventHandler<FileListenerArgs> RuleMatch;
+        public EventHandler<FileListenerArgs> RuleNotMatch;
+        public EventHandler<FileListenerArgs> Error;
 
 
         public FolderListener(FolderListenerConfigurationSection folderListenerConfigurations, IFileSystem fileSystem = null, FileNameManager fileNameManager = null)
@@ -56,7 +67,7 @@ namespace FolderListener
         {
             
             var fileInfo = _fileSystem.FileInfo.FromFileName(args.FullPath);
-            Console.WriteLine($"\n{messages.FileCreated}\n{messages.FileName}:{fileInfo.Name}\n{messages.FileCreationDate}:{fileInfo.CreationTime}");
+            FileCreated?.Invoke(this, new FileListenerArgs() { Message = $"\n{messages.FileCreated}\n{messages.FileName}:{fileInfo.Name}\n{messages.FileCreationDate}:{fileInfo.CreationTime}" });
             if (!fileInfo.Attributes.Equals(FileAttributes.Directory))
             {
                 var passedRule = _folderListenerConfigurations.GetRules()
@@ -74,10 +85,10 @@ namespace FolderListener
             string destinationFolderPath = defaultFolder.Path;
 
             if (rule == null)
-                Console.WriteLine($"\n{messages.RuleNotMatched}");
+                RuleMatch?.Invoke(this, new FileListenerArgs() { Message = $"\n{messages.RuleNotMatched}" });
             else
             {
-                Console.WriteLine($"\n{messages.RuleMatched} {rule.Template}\n");
+                RuleNotMatch?.Invoke(this, new FileListenerArgs() { Message = $"\n{messages.RuleMatched} {rule.Template}\n" });
                 destinationFolderPath = rule.DestinationFolder;
             }
 
@@ -89,11 +100,11 @@ namespace FolderListener
                 var resultFileName = changeFileNameFunc != null ? changeFileNameFunc(fileInfo, defaultFolder, rule) : fileInfo.Name;
                 var destinationFileName = destinationFolderPath + $"\\{resultFileName}";
                 File.Move(fileInfo.FullName, destinationFileName);
-                Console.WriteLine($"{messages.FileMoved} {destinationFolderPath}");
+                FileMoved?.Invoke(this, new FileListenerArgs() { Message = $"{messages.FileMoved} {destinationFolderPath}" });
             }
             catch (IOException exc)
             {
-                Console.WriteLine(exc.Message);
+                Error?.Invoke(this, new FileListenerArgs() { Message = exc.Message });
             }
         }
       

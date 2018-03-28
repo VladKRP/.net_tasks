@@ -29,6 +29,13 @@ namespace FolderListener
                 CultureInfo.DefaultThreadCurrentUICulture = culture;
 
                 FolderListener folderListener = new FolderListener(folderListenerConfigurations);
+
+                folderListener.FileCreated += OnActivity;
+                folderListener.FileMoved += OnActivity;
+                folderListener.RuleMatch += OnActivity;
+                folderListener.RuleNotMatch += OnActivity;
+                folderListener.Error += OnActivity;
+
                 folderListener.Listen();
                 while (true) {
                     var userInput = Console.ReadKey();
@@ -43,5 +50,7 @@ namespace FolderListener
             return keyInfo.Modifiers == ConsoleModifiers.Control && keyInfo.Key == ConsoleKey.C ||
                    keyInfo.Modifiers == ConsoleModifiers.Control && keyInfo.Key == ConsoleKey.Pause;
         }
+
+        static void OnActivity(object o, FileListenerArgs args) => Console.WriteLine(args.Message);
     }
 }
