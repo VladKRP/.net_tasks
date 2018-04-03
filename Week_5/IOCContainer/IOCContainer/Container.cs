@@ -42,7 +42,7 @@ namespace IOCContainer
         {
             if (type == null)
                 throw new ArgumentNullException();
-            if (type.IsAbstract || type.IsInterface)
+            else if (type.IsAbstract || type.IsInterface)
                 throw new AbstractionResolvingException(type, "Can't add abstract class or interface as resolver");
             else if (!TypeResolvers.Keys.Contains(type) && !TypeResolvers.Values.Contains(type))
                 TypeResolvers.Add(type, type);
@@ -52,7 +52,7 @@ namespace IOCContainer
         {
             if (type == null || baseType == null)
                 throw new ArgumentNullException();
-            if (type.IsAbstract || type.IsInterface)
+            else if (type.IsAbstract || type.IsInterface)
                 throw new AbstractionResolvingException(type, "Can't add abstract class or interface as resolver");
             else if (!TypeResolvers.Keys.Contains(baseType) && !TypeResolvers.Values.Contains(type))
                 TypeResolvers.Add(baseType, type);
@@ -82,13 +82,15 @@ namespace IOCContainer
         {
             if (TypeResolvers.TryGetValue(type, out Type resolver))
                 return Activator.CreateInstance(resolver);
-            return resolver;
+            throw new AbstractionResolvingException(type, "Can't find concrete class for abstraction");
         }
 
         private object ResolveConstructorImport(Type type)
         {
             ConstructorInfo constructor = type.GetConstructors().FirstOrDefault();
             object[] parameters = constructor.GetParameters().Select(x => CreateInstance(x.ParameterType)).ToArray();
+            if (parameters?.Count() == 0)
+                return Activator.CreateInstance(type);
             return constructor.Invoke(parameters);
         }
 
