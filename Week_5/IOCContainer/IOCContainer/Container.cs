@@ -52,41 +52,53 @@ namespace IOCContainer
         {
             if (type == null || baseType == null)
                 throw new ArgumentNullException();
-            if(type.IsAbstract || type.IsInterface)
+            if (type.IsAbstract || type.IsInterface)
                 throw new AbstractionResolvingException(type, "Can't add abstract class or interface as resolver");
             else if (!TypeResolvers.Keys.Contains(baseType) && !TypeResolvers.Values.Contains(type))
                 TypeResolvers.Add(baseType, type);
         }
 
 
-        public object CreateInstance(Type type, params object[] args)
+        public object CreateInstance(Type type)
         {
-            var typeProperties = type.GetProperties().Where(x => x.GetCustomAttribute<ImportAttribute>() != null);
-            if (type.GetCustomAttribute<ImportConstructorAttribute>() != null)
+            object instance = null;
+            if (type.IsAbstract || type.IsInterface)
+                instance = ResolveAbstraction(type);
+            else
             {
-                var constructorParameters = type.GetConstructors().FirstOrDefault().GetParameters();
-                if (constructorParameters.Count() > 0 && constructorParameters.Count() == args.Count())
-                {
-                    var instances = args.Zip(constructorParameters, (x, y) => this.CreateInstance(y.ParameterType));
-                    return Activator.CreateInstance(type, instances);
-                }
+                var importProperties = type.GetProperties().Where(x => x.GetCustomAttribute<ImportAttribute>() != null);
+                var importConstructor = type.GetCustomAttribute<ImportConstructorAttribute>();
+
+                if (importConstructor != null)
+                    instance = ResolveConstructorImport(type);
+                else if (importProperties?.Count() > 0)
+                    instance = ResolvePropertyImport(type, importProperties);
             }
-            else if (typeProperties != null)
-            {
-                var types = typeProperties.Select(x => x.PropertyType).Select(x => CreateInstance(x));
+            
+            return instance ?? Activator.CreateInstance(type);
+        }
 
+        private object ResolveAbstraction(Type type)
+        {
+            if (TypeResolvers.TryGetValue(type, out Type resolver))
+                return Activator.CreateInstance(resolver);
+            return resolver;
+        }
 
-            }
+        private object ResolveConstructorImport(Type type)
+        {
+            ConstructorInfo constructor = type.GetConstructors().FirstOrDefault();
+            object[] parameters = constructor.GetParameters().Select(x => CreateInstance(x.ParameterType)).ToArray();
+            return constructor.Invoke(parameters);
+        }
 
-            else if (type.IsAbstract || type.IsInterface)
-            {
-                if (TypeResolvers.TryGetValue(type, out Type resolver))
-                    return Activator.CreateInstance(resolver);
-            }
-
-
-
-            return Activator.CreateInstance(type);
+        private object ResolvePropertyImport(Type type, IEnumerable<PropertyInfo> properties)
+        {
+            throw new NotImplementedException();
+            
+            //var props = properties.Select(x => this.CreateInstance(x.PropertyType));
+            //var instance = Activator.CreateInstance(type);
+            //return Activator.CreateInstance(type, props);
         }
 
         public T CreateInstance<T>()
