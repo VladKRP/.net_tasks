@@ -121,6 +121,7 @@ namespace IOCContainerTests
         {
             var container = new Container();
             container.AddType(typeof(ICustomerDAL), typeof(CustomerDAL));
+            container.AddType(typeof(Logger));
 
             var customerDAL = (CustomerDAL)container.CreateInstance(typeof(ICustomerDAL));
 
@@ -132,18 +133,22 @@ namespace IOCContainerTests
         public void CreateInstance_PassInstanceWithConstructorInjection_CreateConcreteClass()
         {
             var container = new Container();
+            container.AddType(typeof(ICustomerDAL), typeof(CustomerDAL));
 
             var customerBLL = (CustomerBLL)container.CreateInstance(typeof(CustomerBLL));
 
-            throw new NotImplementedException();
+            Assert.IsNotNull(customerBLL);
+            Assert.AreEqual(typeof(CustomerBLL), customerBLL.GetType());
         }
 
         [TestMethod]
-        public void CreateInstance_PassInstanceWithAttributeInjection_CreateConcreteClass()
+        public void CreateInstance_PassInstanceWithPropertyInjection_CreateConcreteClass()
         {
             var container = new Container();
+            container.AddType(typeof(ICustomerDAL), typeof(CustomerDAL));
 
             var customerBLL = (CustomerBLL2)container.CreateInstance(typeof(CustomerBLL2));
+
 
             throw new NotImplementedException();
         }
@@ -153,10 +158,12 @@ namespace IOCContainerTests
         public void CreateInstanceGeneric_PassInstanceWithConstructorInjection_CreateConcreteClass()
         {
             var container = new Container();
+            container.AddType(typeof(ICustomerDAL), typeof(CustomerDAL));
 
             var customerBLL = container.CreateInstance<CustomerBLL>();
 
-            throw new NotImplementedException();
+            Assert.IsNotNull(customerBLL);
+            Assert.AreEqual(typeof(CustomerBLL), customerBLL.GetType());
         }
     }
 }
