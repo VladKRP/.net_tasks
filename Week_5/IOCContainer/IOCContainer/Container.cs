@@ -94,11 +94,10 @@ namespace IOCContainer
 
         private object ResolvePropertyImport(Type type, IEnumerable<PropertyInfo> properties)
         {
-            throw new NotImplementedException();
-            
-            //var props = properties.Select(x => this.CreateInstance(x.PropertyType));
-            //var instance = Activator.CreateInstance(type);
-            //return Activator.CreateInstance(type, props);
+            var instance = Activator.CreateInstance(type);
+            foreach (var property in properties)
+                type.GetProperty(property.Name).SetValue(instance, CreateInstance(property.PropertyType));
+            return instance;
         }
 
         public T CreateInstance<T>()

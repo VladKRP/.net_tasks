@@ -132,12 +132,15 @@ namespace IOCContainerTests
         [TestMethod]
         public void CreateInstance_PassInstanceWithConstructorInjection_CreateConcreteClass()
         {
+            int fieldsCount = 2;
             var container = new Container();
             container.AddType(typeof(ICustomerDAL), typeof(CustomerDAL));
 
             var customerBLL = (CustomerBLL)container.CreateInstance(typeof(CustomerBLL));
+            var fields = customerBLL.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance);
 
             Assert.IsNotNull(customerBLL);
+            Assert.AreEqual(fieldsCount, fields.Length);
             Assert.AreEqual(typeof(CustomerBLL), customerBLL.GetType());
         }
 
@@ -147,10 +150,13 @@ namespace IOCContainerTests
             var container = new Container();
             container.AddType(typeof(ICustomerDAL), typeof(CustomerDAL));
 
-            var customerBLL = (CustomerBLL2)container.CreateInstance(typeof(CustomerBLL2));
+            var customerBLL2 = (CustomerBLL2)container.CreateInstance(typeof(CustomerBLL2));
 
+            Assert.IsNotNull(customerBLL2);
+            Assert.IsNotNull(customerBLL2.CustomerDAL);
+            Assert.IsNotNull(customerBLL2.Logger);
+            Assert.AreEqual(typeof(CustomerBLL2), customerBLL2.GetType());
 
-            throw new NotImplementedException();
         }
 
 
