@@ -44,9 +44,9 @@ namespace CustomConverter
                 str = str.Skip(1);
             }
 
-            for (int factor = 1, j = str.Count() - 1; j >= 0; j--, factor *= 10)
+            for (int j = str.Count() - 1; j >= 0; j--)
             {
-                result += (str.ElementAt(j) - 48) * factor;
+                result += result * 10 + (int)(char.GetNumericValue(str.ElementAt(j)));
                 if (result > int.MaxValue)
                 {
                     if (isNegative)
