@@ -12,7 +12,7 @@ namespace CustomConverter.Tests
         [InlineData("1000", 1000)]
         [InlineData("-10000", -10000)]
         [InlineData("253242434", 253242434)]
-        public void CustomConverter_ReturnConvertedString(string str, int expected)
+        public void CustomConverter_ReturnConvertedString(string str, decimal expected)
         {
             Assert.Equal(expected, CustomConverter.ToInt32(str));
         }
