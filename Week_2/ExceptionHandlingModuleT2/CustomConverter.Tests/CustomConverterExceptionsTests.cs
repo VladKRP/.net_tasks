@@ -8,19 +8,19 @@ namespace CustomConverter.Tests
         [Fact]
         public void CustomConverter_PassNullString_ThrowCustomConverterException()
         {
-                Assert.Throws<CustomConverterException>(() => CustomConverter.ToInt32(null));     
+                Assert.Throws<ArgumentNullException>(() => CustomConverter.ToInt32(null));     
         }
 
         [Fact]
         public void CustomConverter_PassWhiteSpaceString_ThrowCustomConverterException()
         {
-            Assert.Throws<CustomConverterException>(() => CustomConverter.ToInt32("   "));
+            Assert.Throws<ArgumentException>(() => CustomConverter.ToInt32("   "));
         }
 
         [Fact]
         public void CustomConverter_PassEmptyString_ThrowCustomConverterException()
         {
-            Assert.Throws<CustomConverterException>(() => CustomConverter.ToInt32(""));
+            Assert.Throws<ArgumentException>(() => CustomConverter.ToInt32(""));
         }
 
 
