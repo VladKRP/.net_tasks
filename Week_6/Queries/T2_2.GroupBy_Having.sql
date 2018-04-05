@@ -17,13 +17,14 @@ group by YEAR(OrderDate)
 	-- с названием колонки ‘Seller’ и колонку c количеством заказов возвращать с названием 'Amount'.
 	--  Результаты запроса должны быть упорядочены по убыванию количества заказов. 
 
---????
-select EmployeeID, count(EmployeeID) as 'Amount' 
-from Northwind.Northwind.Orders 
-group by EmployeeID 
-order by 'Amount' desc
+select emp.FirstName + emp.LastName as 'Seller', oa.Amount 
+from Northwind.Northwind.Employees as emp 
+inner join (select ord.EmployeeID, count(ord.EmployeeID) as 'Amount' 
+	  from Northwind.Northwind.Orders as ord 
+	  group by ord.EmployeeID) as oa on emp.EmployeeID = oa.EmployeeID 
+order by oa.Amount desc
 
-select EmployeeID, FirstName + LastName as 'Seller' from Northwind.Northwind.Employees
+
 
 --3.	По таблице Orders найти количество заказов, сделанных каждым продавцом и для каждого покупателя.
  --Необходимо определить это только для заказов, сделанных в 1998 году. 
@@ -39,10 +40,12 @@ group by EmployeeID,CustomerID
  -- Не использовать конструкцию JOIN. 
 
  --????
- select * from Northwind.Northwind.Employees where City in (select City from Northwind.Northwind.Customers)
+ select emp.FirstName + emp.LastName as 'Seller', cust.CustomerID as 'Customer', cust.City
+ from Northwind.Northwind.Employees as emp, Northwind.Northwind.Customers as cust 
+ where emp.City = cust.City
 
 
 --5.	Найти всех покупателей, которые живут в одном городе.
 
 --6.	По таблице Employees найти для каждого продавца его руководителя.
-
+select * from Northwind.Northwind.Employees

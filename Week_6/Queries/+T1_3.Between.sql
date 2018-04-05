@@ -15,5 +15,7 @@ order by Country
 --3.	Выбрать всех заказчиков из таблицы Customers, 
 --у которых название страны начинается на буквы из диапазона b и g, не используя оператор BETWEEN. 
 
-select CustomerID, Country from Northwind.Northwind.Customers
-where Country like '^[b-g]'
+select CustomerID, Country 
+from Northwind.Northwind.Customers 
+where left(Country,1) > 'a' and left(Country,1) < 'i' 
+ 

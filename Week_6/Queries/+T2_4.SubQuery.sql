@@ -18,5 +18,8 @@ where SupplierId in (select SupplierID from Northwind.Northwind.Products where U
 /*
 3.	Выдать всех заказчиков (таблица Customers), которые не имеют ни одного заказа (подзапрос по таблице Orders). Использовать оператор EXISTS.
 */
-select * from Northwind.Northwind.Customers  
-where CustomerID not in (select CustomerID from Northwind.Northwind.Orders group by CustomerID having count(CustomerID) > 0)
+
+select cust.CustomerID from Northwind.Northwind.Customers  as cust
+where not exists (select CustomerID 
+						 from Northwind.Northwind.Orders 
+						 where cust.CustomerID = CustomerID)

@@ -3,7 +3,9 @@
 1.	Выбрать в таблице Orders заказы, которые были доставлены после 6 мая 1998 года (колонка ShippedDate) 
 включительно и которые доставлены с ShipVia >= 2. Запрос должен возвращать только колонки OrderID, ShippedDate и ShipVia. 
 */
-select OrderID, ShippedDate, ShipVia from Northwind.Northwind.Orders where ShippedDate > '1998-05-06' and ShipVia >= 2
+select OrderID, ShippedDate, ShipVia 
+from Northwind.Northwind.Orders 
+where ShippedDate > '1998-05-06' and ShipVia >= 2
 
 /*
 2.	Написать запрос, который выводит только недоставленные заказы из таблицы Orders. 
@@ -22,6 +24,14 @@ where ShippedDate is null
  В результатах запроса возвращать для колонки ShippedDate вместо значений NULL строку ‘Not Shipped’,
   для остальных значений возвращать дату в формате по умолчанию.
 */
+
+-- select OrderID as 'Order Number', ShippedDate
+-- from Northwind.Northwind.Orders 
+-- where ShippedDate > '1998-06-06'
+-- union
+-- select OrderID as 'Order Number', ShippedDate = 'Not Shipped'
+-- from Northwind.Northwind.Orders 
+-- where ShippedDate is null
 
 
 
