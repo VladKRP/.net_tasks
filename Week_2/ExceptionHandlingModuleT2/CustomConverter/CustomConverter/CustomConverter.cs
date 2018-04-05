@@ -38,6 +38,7 @@ namespace CustomConverter
         private static bool TryParse(IEnumerable<char> str, bool isNegative, out long number)
         {
             long result = 0;
+            const int factor = 10;
 
             if (isNegative)
             {
@@ -46,7 +47,7 @@ namespace CustomConverter
 
             for (int j = str.Count() - 1; j >= 0; j--)
             {
-                result += result * 10 + (int)(char.GetNumericValue(str.ElementAt(j)));
+                result += result * factor + (int)(char.GetNumericValue(str.ElementAt(j)));
                 if (result > int.MaxValue)
                 {
                     if (isNegative)
