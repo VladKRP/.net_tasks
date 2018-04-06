@@ -69,7 +69,7 @@ namespace SampleQueries
             ObjectDumper.Write(customersWithSuppliers, 3);
             ObjectDumper.Write(Environment.NewLine);
 
-            var customerWithSuppliersWithGroupBy = dataSource.Customers
+            var customerWithSuppliersGroupBy = dataSource.Customers
                                                              .GroupJoin(dataSource.Suppliers,
                                                                         customer => new { customer.City, customer.Country },
                                                                         supplier => new { supplier.City, supplier.Country },
@@ -81,9 +81,13 @@ namespace SampleQueries
 
             ObjectDumper.Write(customersWithSuppliers, 3);
 
-            var isSampleResultEqual = customersWithSuppliers.SequenceEqual(customerWithSuppliersWithGroupBy);
-
-            var isEqual = customersWithSuppliers.Zip(customerWithSuppliersWithGroupBy, (x, y) => x.suppliers.Count() == y.suppliers.Count() && x.customer.CompanyName == y.customer.CompanyName);
+            var isSame = customersWithSuppliers.Count() == customerWithSuppliersGroupBy.Count() &&
+                         customersWithSuppliers.Zip(customerWithSuppliersGroupBy, (x, y) =>
+                                                    {
+                                                        return x.suppliers.Count() == y.suppliers.Count() &&
+                                                        x.customer.CompanyName == y.customer.CompanyName;
+                                                    })
+                                               .All(x => x == true);
 
             IEnumerable<Supplier> GetSuppliersThatLivesInSameCountryAndCityWithCustomer(Customer customer)
             {
@@ -148,7 +152,8 @@ namespace SampleQueries
                                                      .ThenByDescending(c => c.startDate.Month)
                                                      .ThenByDescending(c => c.customer.Orders.Sum(order => order.Total))
                                                      .ThenBy(c => c.customer.CompanyName)
-                                                     .Select(c => new {
+                                                     .Select(c => new
+                                                     {
                                                          c.customer,
                                                          startDate = c.startDate.ToString("MM/yyyy")
                                                      });
@@ -187,19 +192,21 @@ namespace SampleQueries
         [Description("This sample group products by categories, then by existence on stock, then by price ")]
         public void Linq7()
         {
-            var groupedByCategoryProducts = dataSource.Products.Where(product => product != null && !string.IsNullOrWhiteSpace(product.Category))
-                                                               .GroupBy(product => product.Category)
-                                                               .Select(gcProduct => new
-                                                               {
-                                                                   category = gcProduct.Key,
-                                                                   productsByExistenceInStock = gcProduct.GroupBy(product => product.UnitsInStock > 0)
-                                                                                                 .Select(gcuProduct => new
-                                                                                                 {
-                                                                                                     IsInStock = gcuProduct.Key,
-                                                                                                     productsByPrice = gcuProduct.OrderBy(p => p.UnitPrice)
-                                                                                                 })
-                                                               });
-            ObjectDumper.Write(groupedByCategoryProducts, 3);
+            var groupedProducts = dataSource.Products
+                                            .Where(product => product != null && !string.IsNullOrWhiteSpace(product.Category))
+                                            .GroupBy(product => product.Category)
+                                            .Select(gcProduct => new
+                                             {
+                                                 category = gcProduct.Key,
+                                                 productsByExistenceInStock = gcProduct.GroupBy(product => product.UnitsInStock > 0)
+                                                                                        .Select(gcuProduct => new
+                                                                                         {
+                                                                                            IsInStock = gcuProduct.Key,
+                                                                                            productsByPrice = 
+                                                                                                gcuProduct.OrderBy(p => p.UnitPrice)
+                                                                                         })
+                                             });
+            ObjectDumper.Write(groupedProducts, 3);
         }
 
 
@@ -243,8 +250,9 @@ namespace SampleQueries
         [Description("This sample calculate average income and purchase intensity for each city")]
         public void Linq9()
         {
-            var groupedCustomers = dataSource.Customers.Where(customer => customer != null && !string.IsNullOrWhiteSpace(customer.City))
-                                                       .GroupBy(customer => customer.City);
+            var groupedCustomers = dataSource.Customers
+                                             .Where(customer => customer != null && !string.IsNullOrWhiteSpace(customer.City))
+                                             .GroupBy(customer => customer.City);
 
             var citiesOrdersStats = groupedCustomers.Select(ccustomers => new
             {
