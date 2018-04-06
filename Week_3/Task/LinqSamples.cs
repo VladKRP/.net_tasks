@@ -9,6 +9,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using SampleSupport;
@@ -59,28 +60,26 @@ namespace SampleQueries
                                                                  suppliers = dataSource.Suppliers.Where(supplier => supplier != null &&
                                                                                                                     string.Equals(supplier.Country, customer.Country) &&
                                                                                                                     string.Equals(supplier.City, customer.City))
-                                                             });
+                                                             }).Where(cs => cs.suppliers.Count() > 0);
 
             ObjectDumper.Write(customersWithSuppliers, 1);
+            ObjectDumper.Write(Environment.NewLine);
 
-            //with group
-            var groupedCustomers = dataSource.Customers.Where(customer => customer != null)
-                                                       .Select(customer => new
-                                                       {
-                                                           address = new { country = customer.Country, city = customer.City },
-                                                           customer
-                                                       }).GroupBy(customer => customer.address);
+            var customerWithSuppliersWithGroupBy = dataSource.Customers.Join(dataSource.Suppliers,
+                customer => new { customer.City, customer.Country },
+                supplier => new { supplier.City, supplier.Country },
+                (customer, supplier) => new
+                {
+                    customer,
+                    supplier
+                }).GroupBy(x => x.customer).Select(cs => new
+                {
+                    customer = cs.Key,
+                    suppliers = cs.Select(x => x.supplier)
+                });
 
-            var groupedSuppliers = dataSource.Suppliers.Where(supplier => supplier != null)
-                                                       .Select(supplier => new
-                                                       {
-                                                           address = new { country = supplier.Country, city = supplier.City },
-                                                           supplier
-                                                       }).GroupBy(supplier => supplier.address);
 
-            var customersWithSuppliersGroupVariant = groupedCustomers.Where(x => (groupedSuppliers.Any(y => x.Key.Equals(y.Key))));
-
-            ObjectDumper.Write(customersWithSuppliersGroupVariant, 3);      
+            ObjectDumper.Write(customerWithSuppliersWithGroupBy, 1);
         }
 
 
@@ -106,7 +105,7 @@ namespace SampleQueries
                                                              .Select(customer => new
                                                              {
                                                                  customer,
-                                                                 startDate = customer.Orders.Min(order => order.OrderDate)
+                                                                 startDate = customer.Orders.Min(order => order.OrderDate).ToString("MM/yyyy")
                                                              });
 
             ObjectDumper.Write(customersWithStartDate, 1);
@@ -124,10 +123,14 @@ namespace SampleQueries
                                                         customer,
                                                         startDate = customer.Orders.Min(order => order.OrderDate)
                                                     })
-                                                     .OrderBy(c => c.startDate.Year)
-                                                     .ThenBy(c => c.startDate.Month)
-                                                     .ThenByDescending(c => c.customer.Orders.Max(order => order.Total))
-                                                     .ThenBy(c => c.customer.CompanyName);
+                                                     .OrderByDescending(c => c.startDate.Year)
+                                                     .ThenByDescending(c => c.startDate.Month)
+                                                     .ThenByDescending(c => c.customer.Orders.Sum(order => order.Total))
+                                                     .ThenBy(c => c.customer.CompanyName)
+                                                     .Select(c => new {
+                                                         c.customer,
+                                                         startDate = c.startDate.ToString("MM/yyyy")
+                                                     });
             ObjectDumper.Write(customersWithStartDate, 1);
         }
 
@@ -139,10 +142,10 @@ namespace SampleQueries
         {
             var customers = dataSource.Customers.Where(customer => customer != null &&
                                                                    string.IsNullOrWhiteSpace(customer.PostalCode) ||
-                                                                   !customer.PostalCode.All(code => char.IsNumber(code)) ||
+                                                                   !customer.PostalCode.All(code => char.IsDigit(code)) ||
                                                                    string.IsNullOrWhiteSpace(customer.Region) ||
                                                                    string.IsNullOrEmpty(customer.Phone) ||
-                                                                   (customer.Phone.IndexOf("(") < 0 && customer.Phone.IndexOf(")") < 0));
+                                                                   !new Regex(@"^\(\d+\)").Match(customer.Phone).Success);
             ObjectDumper.Write(customers);
         }
 
@@ -232,7 +235,7 @@ namespace SampleQueries
                                            .Select(gOrder => new
                                            {
                                                month = gOrder.Key,
-                                               clientActivity = gOrder.Count()
+                                               clientsActivity = gOrder.Count()
                                            });
 
             var yearActivityStats = orders.GroupBy(order => order.OrderDate.Year)
@@ -240,19 +243,20 @@ namespace SampleQueries
                                           .Select(gOrder => new
                                           {
                                               year = gOrder.Key,
-                                              clientActivity = gOrder.Count()
+                                              clientsActivity = gOrder.Count()
                                           });
 
             var monthYearActivityStats = orders.GroupBy(order => order.OrderDate.Year)
                                                .OrderBy(gOrder => gOrder.Key)
                                                .Select(gyOrder => new
                                                {
-                                                    year = gyOrder.Key,
-                                                    groupedOrders = gyOrder.GroupBy(order => order.OrderDate.Month)
+                                                   year = gyOrder.Key,
+                                                   groupedOrders = gyOrder.GroupBy(order => order.OrderDate.Month)
                                                                            .OrderBy(gOrder => gOrder.Key)
-                                                                           .Select(gmOrder => new {
+                                                                           .Select(gmOrder => new
+                                                                           {
                                                                                month = gmOrder.Key,
-                                                                               clientActivity = gmOrder.Count()
+                                                                               clientsActivity = gmOrder.Count()
                                                                            })
                                                });
             ObjectDumper.Write(monthActivityStats, 1);
