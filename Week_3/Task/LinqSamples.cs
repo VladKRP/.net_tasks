@@ -33,53 +33,67 @@ namespace SampleQueries
         public void Linq1()
         {
             var sumBarrier = 6000;
-            var customers = dataSource.Customers.Where(customer => customer != null &&
-                                                                   customer.Orders != null &&
-                                                                   customer.Orders.Count() > 0 &&
-                                                                   customer.Orders.Select(order => order.Total).Sum() > sumBarrier);
 
-            ObjectDumper.Write($"With value 6000 customers count {customers.Count()}{Environment.NewLine}");
-            ObjectDumper.Write(customers);
+            var customersSample = GetCustomerWithSumOfOrdersMoreThanValue(sumBarrier);
+
+            ObjectDumper.Write($"With value 6000 customers count {customersSample.Count()}{Environment.NewLine}");
+            ObjectDumper.Write(customersSample, 3);
 
             sumBarrier = 10000;
-            ObjectDumper.Write($"{Environment.NewLine}With value 10000 customers count {customers.Count()}{Environment.NewLine}");
-            ObjectDumper.Write(customers);
 
+            var anotherCustomersSample = GetCustomerWithSumOfOrdersMoreThanValue(sumBarrier);
+
+            ObjectDumper.Write($"{Environment.NewLine}With value 10000 customers count {anotherCustomersSample.Count()}{Environment.NewLine}");
+            ObjectDumper.Write(anotherCustomersSample, 3);
+
+            IEnumerable<Customer> GetCustomerWithSumOfOrdersMoreThanValue(decimal value)
+            {
+                return dataSource.Customers.Where(customer => customer?.Orders?.Select(order => order.Total).Sum() > value);
+            }
         }
-
 
         [Category("Linq")]
         [Title("Task 2")]
         [Description("This sample return customers with list of suppliers that lives in same country and city with customer")]
         public void Linq2()
         {
-            var customersWithSuppliers = dataSource.Customers.Where(customer => customer != null)
-                                                             .Select(customer => new
-                                                             {
-                                                                 customer,
-                                                                 suppliers = dataSource.Suppliers.Where(supplier => supplier != null &&
-                                                                                                                    string.Equals(supplier.Country, customer.Country) &&
-                                                                                                                    string.Equals(supplier.City, customer.City))
-                                                             }).Where(cs => cs.suppliers.Count() > 0);
 
-            ObjectDumper.Write(customersWithSuppliers, 1);
+            var customersWithSuppliers = dataSource.Customers
+                                                   .Where(customer => customer != null)
+                                                   .Select(customer => new
+                                                   {
+                                                       customer,
+                                                       suppliers = GetSuppliersThatLivesInSameCountryAndCityWithCustomer(customer)
+                                                   });
+
+            ObjectDumper.Write(customersWithSuppliers, 3);
             ObjectDumper.Write(Environment.NewLine);
 
-            var customerWithSuppliersWithGroupBy = dataSource.Customers.Join(dataSource.Suppliers,
-                customer => new { customer.City, customer.Country },
-                supplier => new { supplier.City, supplier.Country },
-                (customer, supplier) => new
-                {
-                    customer,
-                    supplier
-                }).GroupBy(x => x.customer).Select(cs => new
-                {
-                    customer = cs.Key,
-                    suppliers = cs.Select(x => x.supplier)
-                });
+            var customerWithSuppliersGroupBy = dataSource.Customers
+                                                             .GroupJoin(dataSource.Suppliers,
+                                                                        customer => new { customer.City, customer.Country },
+                                                                        supplier => new { supplier.City, supplier.Country },
+                                                                        (customer, suppliers) => new
+                                                                        {
+                                                                            customer,
+                                                                            suppliers
+                                                                        });
 
+            ObjectDumper.Write(customersWithSuppliers, 3);
 
-            ObjectDumper.Write(customerWithSuppliersWithGroupBy, 1);
+            var isSame = customersWithSuppliers.Count() == customerWithSuppliersGroupBy.Count() &&
+                         customersWithSuppliers.Zip(customerWithSuppliersGroupBy, (x, y) =>
+                                                    {
+                                                        return x.suppliers.Count() == y.suppliers.Count() &&
+                                                        x.customer.CompanyName == y.customer.CompanyName;
+                                                    })
+                                               .All(x => x == true);
+
+            IEnumerable<Supplier> GetSuppliersThatLivesInSameCountryAndCityWithCustomer(Customer customer)
+            {
+                return dataSource.Suppliers.Where(supplier => string.Equals(supplier.Country, customer.Country) &&
+                                                              string.Equals(supplier.City, customer.City));
+            }
         }
 
 
@@ -89,11 +103,11 @@ namespace SampleQueries
         public void Linq3()
         {
             int price = 6000;
-            var customers = dataSource.Customers.Where(customer => customer != null &&
-                                                                   customer.Orders != null &&
-                                                                   customer.Orders.Count() > 0 &&
+
+            var customers = dataSource.Customers.Where(customer => customer?.Orders != null &&
                                                                    customer.Orders.Any(order => order.Total > price));
-            ObjectDumper.Write(customers, 1);
+
+            ObjectDumper.Write(customers, 3);
         }
 
         [Category("Linq")]
@@ -101,14 +115,25 @@ namespace SampleQueries
         [Description("This sample return customers with they first purchase date")]
         public void Linq4()
         {
-            var customersWithStartDate = dataSource.Customers.Where(customer => customer != null && customer.Orders != null && customer.Orders.Count() > 0)
+            var customersWithStartDate = dataSource.Customers.Where(customer => customer != null)
                                                              .Select(customer => new
                                                              {
                                                                  customer,
-                                                                 startDate = customer.Orders.Min(order => order.OrderDate).ToString("MM/yyyy")
+                                                                 startDate = GetCustomerFirstPurchaseMonthAndYearOrDefault(customer)
                                                              });
 
-            ObjectDumper.Write(customersWithStartDate, 1);
+            ObjectDumper.Write(customersWithStartDate, 2);
+
+            bool IsCustomerHasOrders(Customer customer)
+            {
+                return customer.Orders != null && customer.Orders.Any();
+            }
+
+            string GetCustomerFirstPurchaseMonthAndYearOrDefault(Customer customer)
+            {
+                return IsCustomerHasOrders(customer) ?
+                    customer.Orders.Min(order => order.OrderDate).ToString("MM/yyyy") : "Unknown";
+            }
         }
 
         [Category("Linq")]
@@ -117,7 +142,7 @@ namespace SampleQueries
         public void Linq5()
         {
             var customersWithStartDate = dataSource.Customers
-                                                    .Where(customer => customer != null && customer.Orders.Count() > 0)
+                                                    .Where(customer => customer != null && customer.Orders.Any())
                                                     .Select(customer => new
                                                     {
                                                         customer,
@@ -127,11 +152,12 @@ namespace SampleQueries
                                                      .ThenByDescending(c => c.startDate.Month)
                                                      .ThenByDescending(c => c.customer.Orders.Sum(order => order.Total))
                                                      .ThenBy(c => c.customer.CompanyName)
-                                                     .Select(c => new {
+                                                     .Select(c => new
+                                                     {
                                                          c.customer,
                                                          startDate = c.startDate.ToString("MM/yyyy")
                                                      });
-            ObjectDumper.Write(customersWithStartDate, 1);
+            ObjectDumper.Write(customersWithStartDate, 2);
         }
 
 
@@ -140,13 +166,25 @@ namespace SampleQueries
         [Description("This sample return customers with wrong postal code or not filled region or incorrect phone number")]
         public void Linq6()
         {
-            var customers = dataSource.Customers.Where(customer => customer != null &&
-                                                                   string.IsNullOrWhiteSpace(customer.PostalCode) ||
-                                                                   !customer.PostalCode.All(code => char.IsDigit(code)) ||
-                                                                   string.IsNullOrWhiteSpace(customer.Region) ||
-                                                                   string.IsNullOrEmpty(customer.Phone) ||
-                                                                   !new Regex(@"^\(\d+\)").Match(customer.Phone).Success);
+            var customers = dataSource.Customers.Where(customer => customer != null && IsCustomerHasIncorrectFields(customer));
+
             ObjectDumper.Write(customers);
+
+            bool IsCustomerHasCorrectPostalCode(Customer customer)
+            {
+                return !string.IsNullOrWhiteSpace(customer.PostalCode) && customer.PostalCode.All(code => char.IsDigit(code));
+            }
+
+            bool IsCustomerHasCorrectPhoneNumber(Customer customer)
+            {
+                return !string.IsNullOrEmpty(customer.Phone) || new Regex(@"^\(\d+\)").Match(customer.Phone).Success;
+            }
+
+            bool IsCustomerHasIncorrectFields(Customer customer)
+            {
+                return !IsCustomerHasCorrectPostalCode(customer) ||
+                       string.IsNullOrWhiteSpace(customer.Region) || !IsCustomerHasCorrectPhoneNumber(customer);
+            }
         }
 
         [Category("Linq")]
@@ -154,19 +192,21 @@ namespace SampleQueries
         [Description("This sample group products by categories, then by existence on stock, then by price ")]
         public void Linq7()
         {
-            var groupedByCategoryProducts = dataSource.Products.Where(product => product != null && !string.IsNullOrWhiteSpace(product.Category))
-                                                               .GroupBy(product => product.Category)
-                                                               .Select(gcProduct => new
-                                                               {
-                                                                   category = gcProduct.Key,
-                                                                   productsByExistenceInStock = gcProduct.GroupBy(product => product.UnitsInStock > 0)
-                                                                                                 .Select(gcuProduct => new
-                                                                                                 {
-                                                                                                     IsInStock = gcuProduct.Key,
-                                                                                                     productsByPrice = gcuProduct.OrderBy(p => p.UnitPrice)
-                                                                                                 })
-                                                               });
-            ObjectDumper.Write(groupedByCategoryProducts, 3);
+            var groupedProducts = dataSource.Products
+                                            .Where(product => product != null && !string.IsNullOrWhiteSpace(product.Category))
+                                            .GroupBy(product => product.Category)
+                                            .Select(gcProduct => new
+                                             {
+                                                 category = gcProduct.Key,
+                                                 productsByExistenceInStock = gcProduct.GroupBy(product => product.UnitsInStock > 0)
+                                                                                        .Select(gcuProduct => new
+                                                                                         {
+                                                                                            IsInStock = gcuProduct.Key,
+                                                                                            productsByPrice = 
+                                                                                                gcuProduct.OrderBy(p => p.UnitPrice)
+                                                                                         })
+                                             });
+            ObjectDumper.Write(groupedProducts, 3);
         }
 
 
@@ -190,20 +230,19 @@ namespace SampleQueries
                                                                      priceGroup = DefinePriceGroup(product.UnitPrice)
                                                                  }).GroupBy(pg => pg.priceGroup);
             ObjectDumper.Write(productsGroupedByPriceGroup, 2);
-        }
 
-        private PriceGroup DefinePriceGroup(decimal price)
-        {
-            PriceGroup priceGroup = PriceGroup.None;
-            if (price < 100)
-                priceGroup = PriceGroup.Cheap;
-            else if (price >= 100 && price <= 200)
-                priceGroup = PriceGroup.Medium;
-            else if (price > 200)
-                priceGroup = PriceGroup.Expensive;
-            return priceGroup;
+            PriceGroup DefinePriceGroup(decimal price)
+            {
+                PriceGroup priceGroup = PriceGroup.None;
+                if (price < 100)
+                    priceGroup = PriceGroup.Cheap;
+                else if (price >= 100 && price <= 200)
+                    priceGroup = PriceGroup.Medium;
+                else if (price > 200)
+                    priceGroup = PriceGroup.Expensive;
+                return priceGroup;
+            }
         }
-
 
 
         [Category("Linq")]
@@ -211,15 +250,33 @@ namespace SampleQueries
         [Description("This sample calculate average income and purchase intensity for each city")]
         public void Linq9()
         {
-            var groupedCustomers = dataSource.Customers.Where(customer => customer != null && !string.IsNullOrWhiteSpace(customer.City))
-                                                       .GroupBy(customer => customer.City);
-            var citiesOrdersStats = groupedCustomers.Select(group => new
+            var groupedCustomers = dataSource.Customers
+                                             .Where(customer => customer != null && !string.IsNullOrWhiteSpace(customer.City))
+                                             .GroupBy(customer => customer.City);
+
+            var citiesOrdersStats = groupedCustomers.Select(ccustomers => new
             {
-                city = group.Key,
-                averageIncome = group.Average(customer => customer.Orders != null && customer.Orders.Count() > 0 ? customer.Orders.Select(order => order.Total).Average() : 0),
-                averagePurchaseIntensity = group.Average(customer => customer.Orders.Count())
+                city = ccustomers.Key,
+                averageIncome = CalculateCustomersAverageIncome(ccustomers),
+                averagePurchaseIntensity = CalculateCustomersAverageIntensity(ccustomers)
             });
-            ObjectDumper.Write(citiesOrdersStats, 1);
+
+            ObjectDumper.Write(citiesOrdersStats, 3);
+
+            double CalculateCustomersAverageIntensity(IEnumerable<Customer> customers)
+            {
+                return customers.Average(customer => customer.Orders.Count());
+            }
+
+            decimal CalculateCustomersAverageIncome(IEnumerable<Customer> customers)
+            {
+                return customers.Average(customer => IsCustomerHasOrders(customer) ? customer.Orders.Average(order => order.Total) : 0);
+            }
+
+            bool IsCustomerHasOrders(Customer customer)
+            {
+                return customer.Orders != null && customer.Orders.Any();
+            }
         }
 
         [Category("Linq")]
@@ -259,11 +316,12 @@ namespace SampleQueries
                                                                                clientsActivity = gmOrder.Count()
                                                                            })
                                                });
-            ObjectDumper.Write(monthActivityStats, 1);
+
+            ObjectDumper.Write(monthActivityStats, 2);
             ObjectDumper.Write(Environment.NewLine);
-            ObjectDumper.Write(yearActivityStats, 1);
+            ObjectDumper.Write(yearActivityStats, 2);
             ObjectDumper.Write(Environment.NewLine);
-            ObjectDumper.Write(monthYearActivityStats, 2);
+            ObjectDumper.Write(monthYearActivityStats, 3);
         }
     }
 }
