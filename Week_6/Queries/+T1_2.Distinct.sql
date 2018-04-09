@@ -20,3 +20,6 @@ select ContactName, Country from Northwind.Northwind.Customers where Country not
 */
 
 select distinct Country from Northwind.Northwind.Customers order by Country desc 
+
+--group by variant
+select Country from Northwind.Northwind.Customers group by Country order by Country desc 

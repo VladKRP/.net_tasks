@@ -41,15 +41,18 @@ group by EmployeeID,CustomerID
 
 -- Неявный Join, по сути конструкция не используется
 
- select emp.EmployeeID, cust.CustomerID, emp.City
+ select emp.EmployeeID, cust.CustomerID, emp.City, emp.Country
  from Northwind.Northwind.Employees as emp, Northwind.Northwind.Customers as cust
- where emp.City = cust.City
+ where emp.City = cust.City and emp.Country = cust.Country 
 
 --5.	Найти всех покупателей, которые живут в одном городе.
 
-select CustomerID, ContactName, City
-from  Northwind.Northwind.Customers
-where City in (select City from Northwind.Northwind.Customers group by City having count(CustomerID) > 1)
+select CustomerID, ContactName, City, Country
+from  Northwind.Northwind.Customers as cust
+where exists (select City from Northwind.Northwind.Customers 
+		      where cust.City = City and cust.Country = Country 
+			  group by City, Country 
+			  having count(CustomerID) > 1)
 
 --6.	По таблице Employees найти для каждого продавца его руководителя.
 
