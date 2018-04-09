@@ -47,12 +47,9 @@ group by EmployeeID,CustomerID
 
 --5.	Найти всех покупателей, которые живут в одном городе.
 
--- Не совсем понятно условие
-
-select cust.City, count(cust.CustomerID)
-from Northwind.Northwind.Customers as cust
-group by cust.City
-
+select CustomerID, ContactName, City
+from  Northwind.Northwind.Customers
+where City in (select City from Northwind.Northwind.Customers group by City having count(CustomerID) > 1)
 
 --6.	По таблице Employees найти для каждого продавца его руководителя.
 
