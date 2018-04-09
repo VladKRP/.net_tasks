@@ -58,4 +58,7 @@ group by cust.City
 
 -- Условие не понятно
 
-select * from Northwind.Northwind.Employees
+select empe.EmployeeID, empe.FirstName + ' ' + empe.LastName as 'Employee name',
+emper.EmployeeID as 'EmployerID', emper.FirstName + emper.LastName as 'Employer name'
+from Northwind.Northwind.Employees as empe 
+left join Northwind.Northwind.Employees as emper on  empe.ReportsTo = emper.EmployeeID
