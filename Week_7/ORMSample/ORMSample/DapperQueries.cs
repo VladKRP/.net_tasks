@@ -45,21 +45,23 @@ namespace ORMSample
         {
             IEnumerable<EmployeeRegion> employeesRegions = new List<EmployeeRegion>();
 
-            string query = @"select * from Northwind.Employees as Employee  
-                             inner join Northwind.EmployeeTerritories as EmployeeTerritories on EmployeeTerritories.EmployeeID = Employee.EmployeeID
-                             inner join Northwind.Territories as Territory on EmployeeTerritories.TerritoryID = Territory.TerritoryID
-                             inner join Northwind.Regions Region on Territory.RegionID = Region.RegionID";
+            string query = @"select distinct res.* from (
+                             select emp.EmployeeID, emp.FirstName, reg.RegionID, reg.RegionDescription
+                             from Northwind.Employees as emp  
+                             inner join Northwind.EmployeeTerritories as et on et.EmployeeID = emp.EmployeeID
+                             inner join Northwind.Territories as ter on et.TerritoryID = ter.TerritoryID
+                             inner join Northwind.Regions reg on ter.RegionID = reg.RegionID) as res";
 
             using (IDbConnection connection =
                 new SqlConnection(_connectionString))
             {
-                employeesRegions = connection.Query<EmployeeRegion, Employee, EmployeeTerritory, Territory, Region, EmployeeRegion>(query,
-                 (employeeRegion, employee, eterritory, territory, region) =>
+                employeesRegions = connection.Query<EmployeeRegion, Employee, Region, EmployeeRegion>(query,
+                 (employeeRegion, employee, region) =>
                  {
                      employeeRegion.Employee = employee;
                      employeeRegion.Region = region;
                      return employeeRegion;
-                 }, splitOn: "EmployeeID, TerritoryID, RegionID");
+                 }, splitOn: "EmployeeID,RegionID");
             }
             return employeesRegions;
         }
