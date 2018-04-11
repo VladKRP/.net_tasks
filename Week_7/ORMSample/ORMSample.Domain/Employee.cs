@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace ORMSample.Domain { 
 
@@ -39,6 +41,8 @@ namespace ORMSample.Domain {
 		public int ReportsTo { get; set; }
 
 		public string PhotoPath { get; set; }
+
+        public ICollection<Territory> Territories { get; set; }
 
 	}
 

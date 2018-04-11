@@ -1,5 +1,7 @@
 
 
+using System.Collections.Generic;
+
 namespace ORMSample.Domain { 
 
 	public class Territory {
@@ -9,5 +11,7 @@ namespace ORMSample.Domain {
 		public string TerritoryDescription { get; set; }
 
         public int RegionID { get; set; }
+
+        public ICollection<Employee> Employees { get; set; }
     }
 }

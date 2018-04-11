@@ -44,10 +44,12 @@
     <Compile Include="Customer.cs" />
     <Compile Include="CustomerCustomerDemo.cs" />
     <Compile Include="CustomerDemographic.cs" />
-    <Compile Include="EmployeeSuppliers.cs" />
-    <Compile Include="EmployeeRegion.cs" />
-    <Compile Include="EmployeesInRegion.cs" />
+    <Compile Include="DTO\CustomerOrdersWithProducts.cs" />
+    <Compile Include="DTO\EmployeeSuppliers.cs" />
+    <Compile Include="DTO\EmployeeRegion.cs" />
+    <Compile Include="DTO\EmployeesInRegion.cs" />
     <Compile Include="Employee.cs" />
+    <Compile Include="EmployeeCreditCard.cs" />
     <Compile Include="EmployeeTerritory.cs" />
     <Compile Include="Order.cs" />
     <Compile Include="OrderDetail.cs" />

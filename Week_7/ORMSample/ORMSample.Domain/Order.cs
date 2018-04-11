@@ -6,11 +6,15 @@ namespace ORMSample.Domain {
 
 		public int OrderID { get; set; }
 
+        public OrderDetail OrderDetail { get; set; }
+
 		public string CustomerID { get; set; }
+        public Customer Customer { get; set; }
 
-		public int EmployeeID { get; set; }
+        public int EmployeeID { get; set; }
+        public Employee Employee { get; set; }
 
-		public DateTime OrderDate { get; set; }
+        public DateTime OrderDate { get; set; }
 
 		public DateTime RequiredDate { get; set; }
 
