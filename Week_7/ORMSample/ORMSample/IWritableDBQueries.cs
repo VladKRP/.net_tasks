@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ORMSample.Domain;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ namespace ORMSample
     {
         void AddEmployeeWithTerritories();
 
-        void MoveProductsToAnotherCategories();
+        void MoveProductsToAnotherCategory(IEnumerable<Product> products, Category category);
 
         void AddProductsWithSuppliersAndCategories();
 

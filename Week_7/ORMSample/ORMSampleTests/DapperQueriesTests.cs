@@ -37,6 +37,21 @@ namespace ORMSampleTests
             throw new NotImplementedException();
         }
 
-        
+        [TestMethod]
+        public void GetEmployeeWithSuppliers_Test()
+        {
+            var employeeSuppliers = _dapperQueries.GetEmployeeWithSuppliers();
+            throw new NotImplementedException();
+        }
+
+
+        [TestMethod]
+        public void ChangeProductToAnother_Test()
+        {
+            _dapperQueries.ChangeProductToAnother();
+            throw new NotImplementedException();
+        }
+
+
     }
 }

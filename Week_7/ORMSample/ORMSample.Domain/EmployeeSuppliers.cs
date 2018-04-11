@@ -10,7 +10,6 @@ namespace ORMSample.Domain
     {
         public Employee Employee { get; set; }
 
-        public IEnumerable<Supplier> Suppliers { get; set; }
-
+        public Supplier Suppliers { get; set; }
     }
 }

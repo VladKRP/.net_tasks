@@ -35,7 +35,7 @@ namespace ORMSample
                     product.Supplier = supplier;
                     product.Category = category;
                     return product;
-                }, splitOn:"SupplierID, CategoryID");
+                }, splitOn:"ProductID, CategoryID, SupplierID");
                 
             }
             return resultProducts;
@@ -45,24 +45,23 @@ namespace ORMSample
         {
             IEnumerable<EmployeeRegion> employeesRegions = new List<EmployeeRegion>();
 
-            string query = @"select * from Northwind.Employees as Employee
-                            inner join Northwind.EmployeeTerritories et on Employee.EmployeeID = et.EmployeeID
-                            inner join Northwind.Territories t on et.TerritoryID = t.TerritoryID
-                            inner join Northwind.Region Region on t.RegionID = Region.RegionID";
+            string query = @"select * from Northwind.Employees as Employee  
+                             inner join Northwind.EmployeeTerritories as EmployeeTerritories on EmployeeTerritories.EmployeeID = Employee.EmployeeID
+                             inner join Northwind.Territories as Territory on EmployeeTerritories.TerritoryID = Territory.TerritoryID
+                             inner join Northwind.Regions Region on Territory.RegionID = Region.RegionID";
 
             using (IDbConnection connection =
                 new SqlConnection(_connectionString))
             {
-                employeesRegions = connection.Query<EmployeeRegion, EmployeeTerritory, Territory, Region, EmployeeRegion>(query,
-                 (employeeRegion, eterritory, territory, region) =>
+                employeesRegions = connection.Query<EmployeeRegion, Employee, EmployeeTerritory, Territory, Region, EmployeeRegion>(query,
+                 (employeeRegion, employee, eterritory, territory, region) =>
                  {
+                     employeeRegion.Employee = employee;
                      employeeRegion.Region = region;
                      return employeeRegion;
-                 }, splitOn: "TerritoryID, RegionID");
+                 }, splitOn: "EmployeeID, TerritoryID, RegionID");
             }
-                return employeesRegions;
-
-            throw new NotImplementedException();
+            return employeesRegions;
         }
 
         public IEnumerable<EmployeesInRegion> GetAmountOfEmployeesByRegion()
@@ -79,7 +78,41 @@ namespace ORMSample
 
         public IEnumerable<EmployeeSuppliers> GetEmployeeWithSuppliers()
         {
+            IEnumerable<EmployeeSuppliers> employeesSuppliers = new List<EmployeeSuppliers>();
+            string query = @"select * from Northwind.Orders as Orders
+                            inner join Northwind.[Order Details] as OrderDetail on Orders.OrderID = OrderDetail.OrderID
+                            inner join Northwind.Products as Product on OrderDetail.ProductID = Product.ProductID
+                            inner join Northwind.Employees as Employee on Orders.EmployeeID = Employee.EmployeeID
+                            inner join Northwind.Suppliers as Supplier on Product.SupplierID = Supplier.SupplierID";
+
+            string query2 = @"select * from Northwind.Employees as Employee
+                            inner join Northwind.Orders as Orders on Employee.EmployeeID = Orders.EmployeeID
+                            inner join Northwind.[Order Details] as OrderDetail on Orders.OrderID = OrderDetail.OrderID
+                            inner join Northwind.Products as Product on OrderDetail.ProductID = Product.ProductID
+                            inner join Northwind.Suppliers as Supplier on Product.SupplierID = Supplier.SupplierID";
+            using (IDbConnection connection =
+                new SqlConnection(_connectionString))
+            {
+                employeesSuppliers = connection.Query<EmployeeSuppliers, Order, OrderDetail, Product, Employee, Supplier, EmployeeSuppliers>(query2,
+                    (employeeSupplier, order, orderDetail, product, employee, supplier) => {
+                        employeeSupplier.Employee = employee;
+                        employeeSupplier.Suppliers = supplier;
+                        return employeeSupplier;
+                    }, splitOn: "OrderID,ProductID,SupplierID ");
+            }
+            return employeesSuppliers;
             throw new NotImplementedException();
+        }
+
+        public void ChangeProductToAnother()
+        {
+            var query = "select * from Northwind.Orders where ShippedDate is null";
+
+            using (IDbConnection connection =
+                new SqlConnection(_connectionString))
+            {
+                var res = connection.Query(query);
+            }
         }
     }
 }
