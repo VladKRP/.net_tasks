@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Data.Entity;
 
 namespace EFORMSample
 {
@@ -30,7 +31,7 @@ namespace EFORMSample
         public IEnumerable<CustomerOrdersWithProducts> GetOrdersByCategory(Category category)//check execution required
         {
             IEnumerable<CustomerOrdersWithProducts> customerOrders = new List<CustomerOrdersWithProducts>();
-            if(category != null)
+            if (category != null)
             {
                 customerOrders = _context.Orders.Include("Customer, OrderDetail")
                                        .Where(x => x.Customer != null && x.OrderDetail != null)
@@ -42,7 +43,7 @@ namespace EFORMSample
                                                   Order = order,
                                                   Product = product
                                               })
-                                        .Where(x => x.Product.Category.CategoryID.Equals(category.CategoryID))
+                                        .Where(x => x.Product.Category.CategoryName == category.CategoryName)
                                         .GroupBy(x => x.Order.Customer.ContactName)
                                         .Select(cproducts => new CustomerOrdersWithProducts()
                                         {

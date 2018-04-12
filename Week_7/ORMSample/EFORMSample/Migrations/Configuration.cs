@@ -15,6 +15,8 @@ namespace EFORMSample.Migrations
 
         protected override void Seed(NorthwindContext context)
         {
+            if (!context.Database.Exists())
+                return;
             ////Task 3
             if (!context.Categories.Any())
             {
@@ -51,8 +53,8 @@ namespace EFORMSample.Migrations
                 DbSetMigrationsExtensions.AddOrUpdate(context.Territories, territories);
                 context.SaveChanges();
             }
-            
-            
+
+
             base.Seed(context);
         }
     }

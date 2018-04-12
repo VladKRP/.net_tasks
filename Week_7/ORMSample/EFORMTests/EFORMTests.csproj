@@ -55,6 +55,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EFSampleRepositoryTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -65,6 +66,10 @@
     <ProjectReference Include="..\EFORMSample\EFORMSample.csproj">
       <Project>{EB1D29DB-CF62-4091-A527-7D1116B9E288}</Project>
       <Name>EFORMSample</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ORMSample.Domain\ORMSample.Domain.csproj">
+      <Project>{41608E3F-A4E6-40E9-8AF4-3A1AE58AE081}</Project>
+      <Name>ORMSample.Domain</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

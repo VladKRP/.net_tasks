@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SqlFileConverter;
+using SqlFileConverter.SqlConverter;
 
 namespace FileConverterTest
 {

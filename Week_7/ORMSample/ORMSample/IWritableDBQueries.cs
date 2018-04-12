@@ -9,12 +9,12 @@ namespace ORMSample
 {
     public interface IWritableDBQueries
     {
-        void AddEmployeeWithTerritories();
+        void AddEmployeeWithTerritories(Employee employee);
 
-        void MoveProductsToAnotherCategory(IEnumerable<Product> products, Category category);
+        void ChangeProductsCategory(Category currentCategory, Category newCategory);
 
-        void AddProductsWithSuppliersAndCategories();
+        void AddProductsWithSuppliersAndCategories(IEnumerable<Product> products);
 
-        void ChangeProductToAnother();
+        void ReplaceProductWhileOrderNotShipped(Product orderProduct, Product sameProduct);
     }
 }

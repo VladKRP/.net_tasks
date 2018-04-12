@@ -1,4 +1,6 @@
 ﻿using SqlFileConverter;
+using SqlFileConverter.Models;
+using SqlFileConverter.SqlConverter;
 using SQLTableToCSConvertUtility.Configuration;
 using System;
 using System.Configuration;

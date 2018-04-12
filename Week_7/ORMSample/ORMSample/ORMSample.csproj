@@ -43,7 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DapperQueries.cs" />
+    <Compile Include="DapperSampleRepository.cs" />
     <Compile Include="IReadOnlyDBQueries.cs" />
     <Compile Include="IWritableDBQueries.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
