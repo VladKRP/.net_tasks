@@ -60,6 +60,18 @@
     <Compile Include="Migrations\201804111536401_v1.3.Designer.cs">
       <DependentUpon>201804111536401_v1.3.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201804130956522_Changes.cs" />
+    <Compile Include="Migrations\201804130956522_Changes.Designer.cs">
+      <DependentUpon>201804130956522_Changes.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201804131108172_Change model according non required fields.cs" />
+    <Compile Include="Migrations\201804131108172_Change model according non required fields.Designer.cs">
+      <DependentUpon>201804131108172_Change model according non required fields.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201804131121499_Change Employee Hire and Birth date to non required.cs" />
+    <Compile Include="Migrations\201804131121499_Change Employee Hire and Birth date to non required.Designer.cs">
+      <DependentUpon>201804131121499_Change Employee Hire and Birth date to non required.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="NorthwindContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -83,6 +95,15 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201804111536401_v1.3.resx">
       <DependentUpon>201804111536401_v1.3.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201804130956522_Changes.resx">
+      <DependentUpon>201804130956522_Changes.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201804131108172_Change model according non required fields.resx">
+      <DependentUpon>201804131108172_Change model according non required fields.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201804131121499_Change Employee Hire and Birth date to non required.resx">
+      <DependentUpon>201804131121499_Change Employee Hire and Birth date to non required.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

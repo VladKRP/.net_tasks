@@ -14,15 +14,15 @@ namespace ORMSample.Domain {
         public int EmployeeID { get; set; }
         public Employee Employee { get; set; }
 
-        public DateTime OrderDate { get; set; }
+        public DateTime? OrderDate { get; set; }
 
-		public DateTime RequiredDate { get; set; }
+		public DateTime? RequiredDate { get; set; }
 
-		public DateTime ShippedDate { get; set; }
+		public DateTime? ShippedDate { get; set; }
 
-		public int ShipVia { get; set; }
+		public int? ShipVia { get; set; }
 
-		public decimal Freight { get; set; }
+		public decimal? Freight { get; set; }
 
 		public string ShipName { get; set; }
 

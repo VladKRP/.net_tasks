@@ -6,10 +6,20 @@ using System.Threading.Tasks;
 
 namespace ORMSample.Domain
 {
+    public class EmployeeSupplier
+    {
+        public int EmployeeID { get; set; }
+
+        public int SupplierID { get; set; }
+    }
+
+
     public class EmployeeSuppliers
     {
+        public int EmployeeID { get; set; }
         public Employee Employee { get; set; }
 
-        public Supplier Suppliers { get; set; }
+        public IEnumerable<int> SuppliersID { get; set; }
     }
+
 }

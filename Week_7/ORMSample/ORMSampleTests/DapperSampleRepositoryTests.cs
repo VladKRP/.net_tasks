@@ -14,9 +14,7 @@ namespace ORMSampleTests
 
         public DapperSampleRepositoryTests()
         {
-            _dapperQueries = new DapperSampleRepository(@"Data Source=EPBYBREW0300\SQLEXPRESS;Initial Catalog=Northwind;
-                                                 Integrated Security=True;Connect Timeout=60;Encrypt=False;
-                                                 TrustServerCertificate=True;ApplicationIntent=ReadWrite;MultiSubnetFailover=False");
+            _dapperQueries = new DapperSampleRepository(@"");//pass database connection string
         }
 
         [TestMethod]
@@ -33,7 +31,8 @@ namespace ORMSampleTests
         public void GetEmployeesWithRegion_Test()
         {
             var employeesRegions = _dapperQueries.GetEmployeesWithRegion();
-            throw new NotImplementedException();
+            Assert.IsNotNull(employeesRegions);
+            Assert.IsTrue(employeesRegions.Any());
         }
 
         [TestMethod]
@@ -48,7 +47,8 @@ namespace ORMSampleTests
         public void GetEmployeeWithSuppliers_Test()
         {
             var employeeSuppliers = _dapperQueries.GetEmployeeWithSuppliers();
-            throw new NotImplementedException();
+            Assert.IsNotNull(employeeSuppliers);
+            Assert.IsTrue(employeeSuppliers.Any());
         }
 
 
@@ -81,9 +81,16 @@ namespace ORMSampleTests
             {
                 new Product()
                 {
-                    ProductName = "Meizu M6S",
-                    Category = new Category(){ CategoryName = "Smartphone"},
-                    Supplier = new Supplier() { ContactName = "Jake Burn", CompanyName = "Meizu"},
+                    ProductName = "Google Air Pods",
+                    Category = new Category(){ CategoryName = "Headphones"},
+                    Supplier = new Supplier(){ CompanyName = "Google"}
+                    
+                },
+                new Product()
+                {
+                    ProductName = "Apple Watch",
+                    Category = new Category(){ CategoryName = "Smartwatch"},
+                    Supplier = new Supplier() { ContactName = "Dummy Fikus", CompanyName = "Apple Inc."},
                 },
 
                 new Product()
@@ -103,7 +110,7 @@ namespace ORMSampleTests
         public void ReplaceProductWhileOrderNotShipped_Test()
         {
             var product = new Product() { ProductID = 17, ProductName = "Pizza Alfa", Discontinued = true };
-            var newProduct = new Product() { ProductID = 77, ProductName = "Pizza 4 sezones", Discontinued = false };
+            var newProduct = new Product() { ProductID = 76, ProductName = "Pizza 4 sezones", Discontinued = false };
 
             _dapperQueries.ReplaceProductWhileOrderNotShipped(product, newProduct);
         }

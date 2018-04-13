@@ -48,6 +48,7 @@
     <Compile Include="DTO\EmployeeSuppliers.cs" />
     <Compile Include="DTO\EmployeeRegion.cs" />
     <Compile Include="DTO\EmployeesInRegion.cs" />
+    <Compile Include="DTO\OrderDetailDTO.cs" />
     <Compile Include="Employee.cs" />
     <Compile Include="EmployeeCreditCard.cs" />
     <Compile Include="EmployeeTerritory.cs" />

@@ -46,10 +46,11 @@ namespace SqlFileConverter.SqlConverter
         private IEnumerable<TableField> GetSqlTableFields(string script)
         {
             ICollection<TableField> tableFields = new List<TableField>();
-            var fieldsDescription = string.Join("", script.Where((x, i) => i > script.IndexOf('(') && i < script.LastIndexOf(')')))
+
+            var fieldsDescriptionBeforeComma = string.Join("", script.Where((x, i) => i > script.IndexOf('(') && i < script.LastIndexOf(')')))
                                                           .Split(',')
-                                                          .Select(x => x.Trim())
-                                                          .Select(x => x.Split(' '));
+                                                          .Select(x => x.Trim());
+            var fieldsDescription = fieldsDescriptionBeforeComma.Select(x => x.Split(' '));
 
             foreach (var fieldDescription in fieldsDescription)
             {

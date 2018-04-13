@@ -11,8 +11,6 @@ namespace ORMSample.Domain.DTO
 
         public string CustomerName { get; set; }
 
-        public IEnumerable<Order> Orders { get; set; }
-
-        public IEnumerable<string> ProductsNames { get; set; }
+        public IEnumerable<OrderDetailDTO> OrderDetails { get; set; }
     }
 }

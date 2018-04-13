@@ -23,37 +23,40 @@ namespace EFORMSample
             _context = context;
         }
 
-        /// <summary>
-        /// Task 1
-        /// </summary>
-        /// <param name="category"></param>
-        /// <returns></returns>
-        public IEnumerable<CustomerOrdersWithProducts> GetOrdersByCategory(Category category)//check execution required
+        /// Task 1 Query
+        public IEnumerable<CustomerOrdersWithProducts> GetOrdersByCategory(Category category)
         {
             IEnumerable<CustomerOrdersWithProducts> customerOrders = new List<CustomerOrdersWithProducts>();
             if (category != null)
             {
-                customerOrders = _context.Orders.Include("Customer, OrderDetail")
-                                       .Where(x => x.Customer != null && x.OrderDetail != null)
-                                       .Join(_context.Products.Include("Category").Where(x => x.Category != null),
-                                              order => order.OrderDetail.ProductID,
-                                              product => product.ProductID,
-                                              (order, product) => new
-                                              {
-                                                  Order = order,
-                                                  Product = product
-                                              })
-                                        .Where(x => x.Product.Category.CategoryName == category.CategoryName)
-                                        .GroupBy(x => x.Order.Customer.ContactName)
-                                        .Select(cproducts => new CustomerOrdersWithProducts()
-                                        {
-                                            CustomerName = cproducts.Key,
-                                            ProductsNames = cproducts.Select(ordProd => ordProd.Product.ProductName),
-                                            Orders = cproducts.Select(ordProd => ordProd.Order)
-                                        });
+                customerOrders = _context.Orders.Include(x => x.Customer)
+                                                .Include(x => x.OrderDetail)
+                                                .Where(x => x.Customer != null && x.OrderDetail != null)
+                                                .Join(_context.Products.Include(x => x.Category).Where(x => x.Category != null),
+                                                        order => order.OrderDetail.ProductID,
+                                                        product => product.ProductID,
+                                                        (order, product) => new
+                                                        {
+                                                            Order = order,
+                                                            Product = product
+                                                        })
+                                                 .Where(x => x.Product.Category.CategoryName == category.CategoryName)
+                                                 .GroupBy(x => x.Order.Customer.ContactName)
+                                                 .Select(cproducts => new CustomerOrdersWithProducts()
+                                                 {
+                                                     CustomerName = cproducts.Key,
+                                                     OrderDetails = cproducts.Select(prod => new OrderDetailDTO()
+                                                     {
+                                                         OrderID = prod.Order.OrderID,
+                                                         ProductName = prod.Product.ProductName,
+                                                         OrderDate = prod.Order.OrderDate,
+                                                         UnitPrice = prod.Product.UnitPrice,
+                                                         ShipAddress = prod.Order.ShipAddress
+                                                     })
+                                                 });
             }
             return customerOrders;
-        }  
+        }
     }
 
 }

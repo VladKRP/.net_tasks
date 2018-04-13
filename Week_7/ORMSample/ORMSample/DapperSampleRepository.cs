@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Dapper;
 using ORMSample.Domain;
+using Dapper.Contrib.Extensions;
 
 namespace ORMSample
 {
@@ -42,25 +43,23 @@ namespace ORMSample
 
         public IEnumerable<EmployeeRegion> GetEmployeesWithRegion()
         {
-            string query = @"select distinct res.* from (
-                             select emp.EmployeeID, emp.FirstName, reg.RegionID, reg.RegionDescription
+            string query = @"select emp.EmployeeID, emp.FirstName, reg.RegionID, reg.RegionDescription
                              from Northwind.Employees as emp  
                              inner join Northwind.EmployeeTerritories as et on et.EmployeeID = emp.EmployeeID
                              inner join Northwind.Territories as ter on et.TerritoryID = ter.TerritoryID
-                             inner join Northwind.Regions reg on ter.RegionID = reg.RegionID) as res";
+                             inner join Northwind.Regions reg on ter.RegionID = reg.RegionID
+                             group by emp.EmployeeID, emp.FirstName, reg.RegionID, reg.RegionDescription";
 
             IEnumerable<EmployeeRegion> employeesRegions = new List<EmployeeRegion>();
 
             using (IDbConnection connection =
                 new SqlConnection(_connectionString))
             {
-                employeesRegions = connection.Query<EmployeeRegion, Employee, Region, EmployeeRegion>(query,
-                 (employeeRegion, employee, region) =>
-                 {
-                     employeeRegion.Employee = employee;
-                     employeeRegion.Region = region;
-                     return employeeRegion;
-                 }, splitOn: "EmployeeID,TerritoryID,RegionID");
+
+                employeesRegions = connection.Query<EmployeeRegion, Region, EmployeeRegion>(query, (eRegion, region) => {
+                    eRegion.Region = region;
+                    return eRegion;
+                }, splitOn: "RegionID");
 
             }
             return employeesRegions;
@@ -88,13 +87,17 @@ namespace ORMSample
             
             using (IDbConnection connection = new SqlConnection(_connectionString))
             {
-                employeesSuppliers = connection.Query<EmployeeSuppliers, Employee, Supplier, EmployeeSuppliers>(query,
-                    (employeeSupplier, employee, supplier) =>
-                    {
-                        employeeSupplier.Employee = employee;
-                        employeeSupplier.Suppliers = supplier;
-                        return employeeSupplier;
-                    }, splitOn: "EmployeeID,OrderID,ProductID,SupplierID ");
+                //employeesSuppliers = connection.Query<EmployeeSuppliers, Employee, Supplier, EmployeeSuppliers>(query,
+                //    (employeeSupplier, employee, supplier) =>
+                //    {
+                //        employeeSupplier.Employee = employee;
+                //        employeeSupplier.Suppliers = supplier;
+                //        return employeeSupplier;
+                //    }, splitOn: "EmployeeID,OrderID,ProductID,SupplierID ");
+
+                employeesSuppliers = connection.Query<EmployeeSupplier>(query)
+                    .GroupBy(x => x.EmployeeID)
+                    .Select(x => new EmployeeSuppliers() { EmployeeID = x.Key, SuppliersID = x.Select(y => y.SupplierID) });
             }
             return employeesSuppliers;
         }
@@ -165,9 +168,12 @@ namespace ORMSample
                 (ProductName, SupplierID, CategoryID, QuantityPerUnit, UnitPrice, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued)
                 values(@ProductName, @SupplierID, @CategoryID, @QuantityPerUnit, @UnitPrice, @UnitsInStock, @UnitsOnOrder, @ReorderLevel, @Discontinued)";
 
-            var insertCategoryQuery = @"insert into Northwind.Categories(CategoryName, Description, Picture) values(@CategoryName, @Description, @Picture)";
+            var insertCategoryQuery = @"insert into Northwind.Categories(CategoryName, Description, Picture) 
+                                        values(@CategoryName, @Description, @Picture);
+                                        select scope_identity()";
             var insertSupplierQuery = @"insert into Northwind.Suppliers(CompanyName,ContactName,ContactTitle,Address,City,Region,PostalCode,Country,Phone,Fax,HomePage)
-                                        values(@CompanyName,@ContactName,@ContactTitle,@Address,@City,@Region,@PostalCode,@Country,@Phone,@Fax,@HomePage)";
+                                        values(@CompanyName,@ContactName,@ContactTitle,@Address,@City,@Region,@PostalCode,@Country,@Phone,@Fax,@HomePage);
+                                        select scope_identity()";
 
             using (IDbConnection connection = new SqlConnection(_connectionString))
             {
@@ -177,23 +183,21 @@ namespace ORMSample
                         new { product.Category.CategoryName });
                     if (!categoryId.Any())
                     {
-                        var categoryInsertingResult = connection.Execute(insertCategoryQuery, new
+                        product.CategoryID = connection.Query<int>(insertCategoryQuery, new
                         {
                             product.Category.CategoryName,
                             product.Category.Description,
                             product.Category.Picture
-                        });
-
-                        product.CategoryID = connection.Query<int>("select top 1 CategoryID from Northwind.Categories order by CategoryID desc").Single();
+                        }).Single();
                     }
                     else
-                        product.CategoryID = product.Category.CategoryID;
+                        product.CategoryID = categoryId.SingleOrDefault();
 
                     var supplierId = connection.Query<int>("select SupplierID from Northwind.Suppliers where ContactName = @SupplierName",
                         new { SupplierName = product.Supplier.ContactName });
                     if (!supplierId.Any())
                     {
-                        var supplierInsertingResult = connection.Execute(insertSupplierQuery, new
+                        product.SupplierID = connection.Query<int>(insertSupplierQuery, new
                         {
                             product.Supplier.CompanyName,
                             product.Supplier.ContactName,
@@ -206,12 +210,10 @@ namespace ORMSample
                             product.Supplier.Phone,
                             product.Supplier.Fax,
                             product.Supplier.HomePage
-                        });
-
-                        product.SupplierID = connection.Query<int>("select top 1 SupplierID from Northwind.Suppliers order by SupplierID desc").Single();
+                        }).Single();
                     }
                     else
-                        product.SupplierID = product.Supplier.SupplierID;
+                        product.SupplierID = supplierId.SingleOrDefault();
 
                     if(product.SupplierID.HasValue && product.CategoryID.HasValue)
                     {
@@ -235,18 +237,15 @@ namespace ORMSample
 
         public void ReplaceProductWhileOrderNotShipped(Product orderProduct, Product sameProduct)
         {
-            var updateQuery = "update Northwind.[Order Details] set ProductID = @NewProductID where OrderID = @OrderID";
-
-            var notShippedOrders = @"select odet.OrderID from Northwind.Orders as ord
-                inner join Northwind.[Order Details] as odet on ord.OrderID = odet.OrderID 
-                where ShippedDate is null and ProductID = @ProductID";
+            var updateQuery = @"update Northwind.[Order Details] set ProductID = @NewProductID 
+                                where ProductID = @CurrentProductID and
+                                      OrderID in (select OrderID from Northwind.Orders where ShippedDate is null)";
 
             using (IDbConnection connection = new SqlConnection(_connectionString))
             {
-                    var notShippedOrdersIDes = connection.Query<int>(notShippedOrders, new { orderProduct.ProductID }).ToArray();
-                    foreach (var orderId in notShippedOrdersIDes)
-                        connection.Execute(updateQuery, new { NewProductID = sameProduct.ProductID, OrderID = orderId });
+                var result = connection.Execute(updateQuery, new { NewProductID = sameProduct.ProductID, CurrentProductID = orderProduct.ProductID });
             }
+                
         }
     }
 }
