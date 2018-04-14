@@ -16,7 +16,8 @@ where SupplierId in (select SupplierID from Northwind.Northwind.Products where U
 										having count(EmployeeID) > 150)
 
 /*
-3.	Выдать всех заказчиков (таблица Customers), которые не имеют ни одного заказа (подзапрос по таблице Orders). Использовать оператор EXISTS.
+3.	Выдать всех заказчиков (таблица Customers), которые не имеют ни одного заказа (подзапрос по таблице Orders).
+ Использовать оператор EXISTS.
 */
 
 select cust.CustomerID from Northwind.Northwind.Customers  as cust
