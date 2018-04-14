@@ -1,36 +1,36 @@
-using System;
+
 
 namespace ORMSample.Domain { 
 
 	public class Order {
 
-		public int OrderID { get; set; }
+		public System.Int32 OrderID { get; set; }
 
-		public string CustomerID { get; set; }
+		public System.String CustomerID { get; set; }
 
-		public int EmployeeID { get; set; }
+		public System.Int32? EmployeeID { get; set; }
 
-		public DateTime OrderDate { get; set; }
+		public System.DateTime? OrderDate { get; set; }
 
-		public DateTime RequiredDate { get; set; }
+		public System.DateTime? RequiredDate { get; set; }
 
-		public DateTime ShippedDate { get; set; }
+		public System.DateTime? ShippedDate { get; set; }
 
-		public int ShipVia { get; set; }
+		public System.Int32? ShipVia { get; set; }
 
-		public decimal Freight { get; set; }
+		public System.Decimal? Freight { get; set; }
 
-		public string ShipName { get; set; }
+		public System.String ShipName { get; set; }
 
-		public string ShipAddress { get; set; }
+		public System.String ShipAddress { get; set; }
 
-		public string ShipCity { get; set; }
+		public System.String ShipCity { get; set; }
 
-		public string ShipRegion { get; set; }
+		public System.String ShipRegion { get; set; }
 
-		public string ShipPostalCode { get; set; }
+		public System.String ShipPostalCode { get; set; }
 
-		public string ShipCountry { get; set; }
+		public System.String ShipCountry { get; set; }
 
 	}
 

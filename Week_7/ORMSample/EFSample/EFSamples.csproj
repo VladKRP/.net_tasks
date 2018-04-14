@@ -7,8 +7,8 @@
     <ProjectGuid>{EB1D29DB-CF62-4091-A527-7D1116B9E288}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>EFORMSample</RootNamespace>
-    <AssemblyName>EFORMSample</AssemblyName>
+    <RootNamespace>EFSamples</RootNamespace>
+    <AssemblyName>EFSamples</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

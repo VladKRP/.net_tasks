@@ -4,9 +4,9 @@ namespace ORMSample.Domain {
 
 	public class CustomerDemographic {
 
-		public string CustomerTypeID { get; set; }
+		public System.String CustomerTypeID { get; set; }
 
-		public string CustomerDesc { get; set; }
+		public System.String CustomerDesc { get; set; }
 
 	}
 

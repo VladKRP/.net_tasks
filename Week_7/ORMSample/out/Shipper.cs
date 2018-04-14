@@ -4,11 +4,11 @@ namespace ORMSample.Domain {
 
 	public class Shipper {
 
-		public int ShipperID { get; set; }
+		public System.Int32 ShipperID { get; set; }
 
-		public string CompanyName { get; set; }
+		public System.String CompanyName { get; set; }
 
-		public string Phone { get; set; }
+		public System.String Phone { get; set; }
 
 	}
 

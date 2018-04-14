@@ -4,25 +4,25 @@ namespace ORMSample.Domain {
 
 	public class Product {
 
-		public int ProductID { get; set; }
+		public System.Int32 ProductID { get; set; }
 
-		public string ProductName { get; set; }
+		public System.String ProductName { get; set; }
 
-		public int SupplierID { get; set; }
+		public System.Int32? SupplierID { get; set; }
 
-		public int CategoryID { get; set; }
+		public System.Int32? CategoryID { get; set; }
 
-		public string QuantityPerUnit { get; set; }
+		public System.String QuantityPerUnit { get; set; }
 
-		public decimal UnitPrice { get; set; }
+		public System.Decimal? UnitPrice { get; set; }
 
-		public int UnitsInStock { get; set; }
+		public System.Int32? UnitsInStock { get; set; }
 
-		public int UnitsOnOrder { get; set; }
+		public System.Int32? UnitsOnOrder { get; set; }
 
-		public int ReorderLevel { get; set; }
+		public System.Int32? ReorderLevel { get; set; }
 
-		public bool Discontinued { get; set; }
+		public System.Boolean Discontinued { get; set; }
 
 	}
 

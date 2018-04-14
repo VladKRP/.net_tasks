@@ -4,29 +4,29 @@ namespace ORMSample.Domain {
 
 	public class Supplier {
 
-		public int SupplierID { get; set; }
+		public System.Int32 SupplierID { get; set; }
 
-		public string CompanyName { get; set; }
+		public System.String CompanyName { get; set; }
 
-		public string ContactName { get; set; }
+		public System.String ContactName { get; set; }
 
-		public string ContactTitle { get; set; }
+		public System.String ContactTitle { get; set; }
 
-		public string Address { get; set; }
+		public System.String Address { get; set; }
 
-		public string City { get; set; }
+		public System.String City { get; set; }
 
-		public string Region { get; set; }
+		public System.String Region { get; set; }
 
-		public string PostalCode { get; set; }
+		public System.String PostalCode { get; set; }
 
-		public string Country { get; set; }
+		public System.String Country { get; set; }
 
-		public string Phone { get; set; }
+		public System.String Phone { get; set; }
 
-		public string Fax { get; set; }
+		public System.String Fax { get; set; }
 
-		public string HomePage { get; set; }
+		public System.String HomePage { get; set; }
 
 	}
 

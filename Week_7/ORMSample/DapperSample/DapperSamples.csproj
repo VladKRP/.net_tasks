@@ -7,8 +7,8 @@
     <ProjectGuid>{E253C1D5-3BBC-498E-8BD3-F13E2F741AE6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ORMSample</RootNamespace>
-    <AssemblyName>ORMSample</AssemblyName>
+    <RootNamespace>DapperSamples</RootNamespace>
+    <AssemblyName>DapperSamples</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

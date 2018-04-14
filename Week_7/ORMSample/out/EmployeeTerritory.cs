@@ -4,9 +4,9 @@ namespace ORMSample.Domain {
 
 	public class EmployeeTerritory {
 
-		public int EmployeeID { get; set; }
+		public System.Int32 EmployeeID { get; set; }
 
-		public string TerritoryID { get; set; }
+		public System.String TerritoryID { get; set; }
 
 	}
 

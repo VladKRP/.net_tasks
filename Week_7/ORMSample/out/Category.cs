@@ -4,13 +4,13 @@ namespace ORMSample.Domain {
 
 	public class Category {
 
-		public int CategoryID { get; set; }
+		public System.Int32 CategoryID { get; set; }
 
-		public string CategoryName { get; set; }
+		public System.String CategoryName { get; set; }
 
-		public string Description { get; set; }
+		public System.String Description { get; set; }
 
-		public byte[] Picture { get; set; }
+		public System.Byte[] Picture { get; set; }
 
 	}
 
