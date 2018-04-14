@@ -48,17 +48,20 @@ namespace SqlFileConverter.SqlConverter
             ICollection<TableField> tableFields = new List<TableField>();
 
             var fieldsDescriptionBeforeComma = string.Join("", script.Where((x, i) => i > script.IndexOf('(') && i < script.LastIndexOf(')')))
-                                                          .Split(',')
+                                                          .Split(new string[]{",\n",",\r\n" }, StringSplitOptions.RemoveEmptyEntries)
                                                           .Select(x => x.Trim());
-            var fieldsDescription = fieldsDescriptionBeforeComma.Select(x => x.Split(' '));
-
-            foreach (var fieldDescription in fieldsDescription)
+           
+            foreach (var fieldDescription in fieldsDescriptionBeforeComma)
             {
+                
+
                 TableField field = new TableField();
-                for (int i = 0; i < fieldDescription.Length; i++)
+
+                var description = fieldDescription.Split(' ');
+                for (int i = 0; i < description.Length; i++)
                 {
                     string type = null;
-                    var trimedDescription = GetTrimedString(fieldDescription[i]);
+                    var trimedDescription = GetTrimedString(description[i]);
                     var possibleType = string.Join("", trimedDescription.TakeWhile(x => x != '('));
                     if (i == 0 && !string.IsNullOrWhiteSpace(trimedDescription))
                         field.FieldName = trimedDescription;
@@ -66,10 +69,33 @@ namespace SqlFileConverter.SqlConverter
                         field.FieldType = type;
                 }
 
+               
+
                 if (!string.IsNullOrWhiteSpace(field.FieldName) && !string.IsNullOrWhiteSpace(field.FieldType))
+                {
+                    if (!IsNotNullField(fieldDescription) && IsValueType(field.FieldType))
+                        field.FieldType += "?";
                     tableFields.Add(field);
+                }
+                    
             }
             return tableFields;
+        }
+
+
+        private bool IsNotNullField(string fieldDefinition)
+        {
+            return fieldDefinition.IndexOf("NOT NULL", StringComparison.CurrentCultureIgnoreCase) > 0;
+        }
+
+        private bool IsValueType(string fieldType)
+        {
+            bool isValueType = false;
+            Type type = Type.GetType(fieldType);
+            if (type.IsValueType)
+                isValueType = true;
+            return isValueType;
+
         }
 
         private string GetTrimedString(string str)
