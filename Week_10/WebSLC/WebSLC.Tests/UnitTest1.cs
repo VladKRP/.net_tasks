@@ -10,9 +10,9 @@ namespace WebSLC.Tests
         [TestMethod]
         public async Task TestMethod1()
         {
-            LinkAnalyzer linkAnalyzer = new LinkAnalyzer();
+            LinkProcessingHelper linkAnalyzer = new LinkProcessingHelper();
             WebsiteDownloader downloader = new WebsiteDownloader("path", linkAnalyzer);
-            var page = await downloader.DownloadPage("https://habrahabr.ru/");
+            
         }
     }
 }

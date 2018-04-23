@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace WebSLC
 {
@@ -12,69 +13,120 @@ namespace WebSLC
     {
         private readonly string _destinationPath;
 
-        private readonly LinkAnalyzer _linkAnalyzer;
+        private readonly LinkProcessingHelper _linkProcessingHelper;
 
-        public EventHandler<EventArgs> DownloadStarted { get; set; }//change EventArg to custom Arg
-        public EventHandler<EventArgs> DownloadEnded { get; set; }
+        private readonly Regex fileNameCorrectingRegEx = new Regex("[/\\:?*\"<>|]+");
 
-        public EventHandler<EventArgs> ReferenceFound { get; set; }//change EventArg to custom Arg
+        public EventHandler<DownloadArgs> WebpageDownloadStarted { get; set; }
+        public EventHandler<DownloadArgs> WebpageDownloadCompleted { get; set; }
 
-        public EventHandler<EventArgs> DepthRestrictionFound { get; set; }
-        public EventHandler<EventArgs> FormatRestrictionFound { get; set; }
-        public EventHandler<EventArgs> DomainSwitchRestrictionFound { get; set; }
+        public EventHandler<EventArgs> LinkFound { get; set; }
 
-        public EventHandler<EventArgs> WebsiteDownloaded { get; set; }
+        public EventHandler<RestrictionArgs> FormatRestrictionFound { get; set; }
+        public EventHandler<RestrictionArgs> DomainSwitchRestrictionFound { get; set; }
 
-        public WebsiteDownloader(string destinationPath, LinkAnalyzer linkAnalyzer)
+        public WebsiteDownloader(string destinationPath, LinkProcessingHelper linkAnalyzer)
         {
             _destinationPath = destinationPath;
-            _linkAnalyzer = linkAnalyzer;
+            _linkProcessingHelper = linkAnalyzer;
         }
 
-        public async Task DownloadAsync(string url, int depth = 0) //tracing ?
+        public async Task DownloadWebpageAsync(string url, int depth = 0)
         {
-            DownloadStarted.Invoke(this, new EventArgs() { });
-            var uri = new Uri(url);
+            var baseUri = new Uri(url);
+            WebpageDownloadStarted.Invoke(this, new DownloadArgs() { Link = url, Time = DateTime.Now });
+            var bytePage = await DownloadPageAsync(url);
+            WebpageDownloadCompleted.Invoke(this, new DownloadArgs() { Link = url, Time = DateTime.Now });
 
-            var page = await DownloadPage(url);
-            var pageStringRepresentation = System.Text.Encoding.UTF8.GetString(page);
-            var destinationFile = string.Format("{0}\\{1}", _destinationPath, uri.Segments.Last());
-            if (_linkAnalyzer.IsHtmlPage(pageStringRepresentation))
-                destinationFile += ".html";
+            var pageLayout = System.Text.Encoding.UTF8.GetString(bytePage);
 
-            using (FileStream fileStream = new FileStream(destinationFile, FileMode.Create, FileAccess.Write))
+            byte[] pageLayoutWithLocalLinks;
+            if (Path.HasExtension(url))
+                pageLayoutWithLocalLinks = bytePage;
+            else
+                pageLayoutWithLocalLinks = System.Text.Encoding.UTF8.GetBytes(_linkProcessingHelper.ReplacePageLinksToLocal(_destinationPath, pageLayout));
+
+
+            var downloadFilePath = GenerateLocalFullFilePath(url, pageLayout);
+
+            using (FileStream fileStream = new FileStream(downloadFilePath, FileMode.Create, FileAccess.Write))
+                fileStream.Write(pageLayoutWithLocalLinks, 0, pageLayoutWithLocalLinks.Length);
+
+            if (depth == 0)
             {
-                await fileStream.WriteAsync(page, 0, page.Length);
-            }
-
-
-            if (depth > 0)//??
-            {
-                var links = _linkAnalyzer.GetWebsiteLinks(pageStringRepresentation);
-                if (links.Any())
+                var pageLinks = _linkProcessingHelper.GetPageResourceLink(pageLayout);
+                if (pageLinks.Any())
                 {
-                    links = links.Select(link => _linkAnalyzer.CorrectLink(uri.IdnHost, link));
-                    foreach (var link in links)
-                        await DownloadAsync(link, depth - 1);
+                    pageLinks = _linkProcessingHelper.ProcessLinks(baseUri.DnsSafeHost, pageLinks);
+                    await DownloadWebpageResourcesAsync(pageLinks, baseUri, 0);
                 }
-               
+
+            }
+            else if (depth > 0)
+            {
+                var pageLinks = _linkProcessingHelper.GetPageLinks(pageLayout);
+                if (pageLinks.Any())
+                {
+                    pageLinks = _linkProcessingHelper.ProcessLinks(baseUri.DnsSafeHost, pageLinks);
+                    await DownloadWebpageResourcesAsync(pageLinks, baseUri, depth);
+                }
             }
 
-
-
-            DownloadEnded.Invoke(this, new EventArgs() { });
         }
 
-        public async Task<byte[]> DownloadPage(string url)
+        private async Task DownloadWebpageResourcesAsync(string pageLayout, Uri baseUri, Func<string, IEnumerable<string>> resourceFilterFunction, int depth)//??
         {
+            var pageLinks = _linkProcessingHelper.GetPageLinks(pageLayout);
+            if (pageLinks.Any())
+            {
+                pageLinks = _linkProcessingHelper.ProcessLinks(baseUri.DnsSafeHost, pageLinks);
+                await DownloadWebpageResourcesAsync(pageLinks, baseUri, depth);
+            }
+        }
+
+        private async Task DownloadWebpageResourcesAsync(IEnumerable<string> pageLinks, Uri baseUri, int depth)
+        {
+            foreach (var link in pageLinks)
+            {
+                var linkUri = new Uri(link);
+
+                LinkFound.Invoke(this, new EventArgs());
+                if (_linkProcessingHelper.IsLinkFormatForbidden(link))
+                    FormatRestrictionFound?.Invoke(this, new RestrictionArgs() { Entity = Path.GetExtension(link) });
+                else if (_linkProcessingHelper.IsLinkDomainForbidden(baseUri, linkUri))
+                    DomainSwitchRestrictionFound?.Invoke(this, new RestrictionArgs() { Entity = linkUri.DnsSafeHost });
+                else
+                    await DownloadWebpageAsync(link, depth - 1);
+            }
+        }
+
+        private async Task<byte[]> DownloadPageAsync(string url)
+        {
+
             byte[] page = { };
 
-            using(HttpClient client = new HttpClient())
-            {
+            using (HttpClient client = new HttpClient())
                 page = await client.GetByteArrayAsync(url);
-            }
 
             return page;
+        }
+
+        private string GenerateLocalFullFilePath(string url, string pageLayout)
+        {
+            var localPath = _destinationPath;
+            var processedFileName = "";
+            if (HtmlAnalyzer.IsHtmlPage(pageLayout))
+                processedFileName = HtmlAnalyzer.GetHtmlPageTitle(pageLayout) + ".html";
+            else
+            {
+                var fileNameWithExtension = Path.GetFileName(url);
+                if (string.IsNullOrWhiteSpace(fileNameWithExtension) || fileNameWithExtension == ".")
+                    processedFileName = url;
+                else
+                    processedFileName = fileNameWithExtension;
+            }
+            localPath += fileNameCorrectingRegEx.Replace(processedFileName, "_");
+            return localPath;
         }
     }
 }
