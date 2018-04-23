@@ -224,11 +224,7 @@ namespace SampleQueries
         public void Linq8()
         {
             var productsGroupedByPriceGroup = dataSource.Products.Where(product => product != null)
-                                                                 .Select(product => new
-                                                                 {
-                                                                     product,
-                                                                     priceGroup = DefinePriceGroup(product.UnitPrice)
-                                                                 }).GroupBy(pg => pg.priceGroup);
+                                                                 .GroupBy(product => DefinePriceGroup(product.UnitPrice));
             ObjectDumper.Write(productsGroupedByPriceGroup, 2);
 
             PriceGroup DefinePriceGroup(decimal price)
