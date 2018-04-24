@@ -17,5 +17,6 @@
   </metadata>
   <files>
     <file src="HospitalStartup.html" target=""></file>
+    <file src="Install.ps1" target="tools"></file>
   </files>
 </package>

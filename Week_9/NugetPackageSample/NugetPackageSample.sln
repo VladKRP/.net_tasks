@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27428.2037
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hospital.Domain", "Hospital.Domain\Hospital.Domain.csproj", "{C45CEABD-2DA0-4E78-8334-31C5063911A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HospitalFeed", "HospitalFeed\HospitalFeed.csproj", "{E696491A-C29B-45B8-A959-4746CADF874D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hospital.Domain.NugetPackage.Test", "Hospital.Domain.NugetPackage.Test\Hospital.Domain.NugetPackage.Test.csproj", "{E8472FD6-62FA-429B-B236-191168DB408A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{C45CEABD-2DA0-4E78-8334-31C5063911A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C45CEABD-2DA0-4E78-8334-31C5063911A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C45CEABD-2DA0-4E78-8334-31C5063911A4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E696491A-C29B-45B8-A959-4746CADF874D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E696491A-C29B-45B8-A959-4746CADF874D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E696491A-C29B-45B8-A959-4746CADF874D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E696491A-C29B-45B8-A959-4746CADF874D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8472FD6-62FA-429B-B236-191168DB408A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8472FD6-62FA-429B-B236-191168DB408A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8472FD6-62FA-429B-B236-191168DB408A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8472FD6-62FA-429B-B236-191168DB408A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

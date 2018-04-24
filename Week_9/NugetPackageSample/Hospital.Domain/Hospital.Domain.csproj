@@ -55,6 +55,8 @@
     <Compile Include="Room.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="app.config.install.xdt" />
+    <None Include="Install.ps1" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
