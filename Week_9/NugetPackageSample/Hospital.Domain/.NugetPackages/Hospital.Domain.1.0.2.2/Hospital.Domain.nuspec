@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Hospital.Domain</id>
+    <version>1.0.2.2</version>
+    <title>Hospital.Domain</title>
+    <authors>EPAM Systems</authors>
+    <owners>EPAM Systems</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>http://license_url_here_or_delete_this_line/</licenseUrl>
+    <projectUrl>http://project_url_here_or_delete_this_line/</projectUrl>
+    <iconUrl>http://icon_url_here_or_delete_this_line/</iconUrl>
+    <description>Class library contain domain model for hospital service</description>
+    <releaseNotes>Add additional package via packages.config file</releaseNotes>
+    <copyright>Copyright 2018</copyright>
+    <tags>Hospital Domain CDP NugetPackageSample</tags>
+    <dependencies>
+      <dependency id="Newtonsoft.Json" version="11.0.2" />
+      <dependency id="NUnit" version="3.10.1" />
+    </dependencies>
+  </metadata>
+</package>
