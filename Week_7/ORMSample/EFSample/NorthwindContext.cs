@@ -15,28 +15,28 @@ namespace EFORMSample
 
         public NorthwindContext(string connectionString):base(connectionString){ }
 
-        public DbSet<Category> Categories { get; set; }
+        public IDbSet<Category> Categories { get; set; }
 
-        public DbSet<Customer> Customers { get; set; }
+        public IDbSet<Customer> Customers { get; set; }
 
-        public DbSet<Employee> Employees { get; set; }
+        public IDbSet<Employee> Employees { get; set; }
 
-        public DbSet<Order> Orders { get; set; }
+        public IDbSet<Order> Orders { get; set; }
 
-        public DbSet<Product> Products { get; set; }
+        public IDbSet<Product> Products { get; set; }
 
-        public DbSet<OrderDetail> OrderDetails { get; set; }
+        public IDbSet<OrderDetail> OrderDetails { get; set; }
 
-        public DbSet<Shipper> Shippers { get; set; }
+        public IDbSet<Shipper> Shippers { get; set; }
 
-        public DbSet<Territory> Territories { get; set; }
+        public IDbSet<Territory> Territories { get; set; }
 
-        public DbSet<Supplier> Suppliers { get; set; }
+        public IDbSet<Supplier> Suppliers { get; set; }
 
-        public DbSet<Region> Regions { get; set; }
+        public IDbSet<Region> Regions { get; set; }
 
         //v1.1
-        public DbSet<EmployeeCreditCard> EmployeeCredirCards { get; set; }
+        public IDbSet<EmployeeCreditCard> EmployeeCredirCards { get; set; }
         //
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
