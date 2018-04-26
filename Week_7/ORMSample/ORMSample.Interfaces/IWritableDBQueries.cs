@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ORMSample
+namespace ORMSample.Interfaces
 {
     public interface IWritableDBQueries
     {
