@@ -9,7 +9,7 @@ using System.Data.Entity;
 
 namespace EFORMSample
 {
-    public class EFSampleRepository
+    public class EFSampleRepository: IDisposable
     {
         private readonly NorthwindContext _context;
 
@@ -22,6 +22,8 @@ namespace EFORMSample
         {
             _context = context;
         }
+
+        
 
         /// Task 1 Query
         public IEnumerable<CustomerOrdersWithProducts> GetOrdersByCategory(Category category)
@@ -56,6 +58,26 @@ namespace EFORMSample
                                                  });
             }
             return customerOrders;
+        }
+
+        private bool isDisposed = false;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (isDisposed)
+                return;
+
+            if (disposing)
+            {
+                _context.Dispose();
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+
+            GC.SuppressFinalize(_context);
         }
     }
 
