@@ -13,7 +13,7 @@ namespace WebSLC
     {
         private readonly string _destinationPath;
 
-        private readonly LinkProcessingHelper _linkProcessingHelper;
+        private readonly HtmlLinkProcessingHelper _linkProcessingHelper;
 
         private readonly Regex fileNameCorrectingRegEx = new Regex("[/\\:?*\"<>|]+");
 
@@ -25,7 +25,7 @@ namespace WebSLC
         public EventHandler<RestrictionArgs> FormatRestrictionFound { get; set; }
         public EventHandler<RestrictionArgs> DomainSwitchRestrictionFound { get; set; }
 
-        public WebsiteDownloader(string destinationPath, LinkProcessingHelper linkAnalyzer)
+        public WebsiteDownloader(string destinationPath, HtmlLinkProcessingHelper linkAnalyzer)
         {
             _destinationPath = destinationPath;
             _linkProcessingHelper = linkAnalyzer;

@@ -21,7 +21,7 @@ namespace WebSLC.Utilily
 
            string[] excludedFormats = {};
         
-            LinkProcessingHelper linkAnalyzer = new LinkProcessingHelper(excludedFormats, DomainSwitchParameter.WithoutRestrictions);
+            HtmlLinkProcessingHelper linkAnalyzer = new HtmlLinkProcessingHelper(excludedFormats, DomainSwitchParameter.WithoutRestrictions);
             WebsiteDownloader downloader = new WebsiteDownloader(defaultPath, linkAnalyzer);
 
             //string[] excludedFormats = { ".png", ".jpg" };

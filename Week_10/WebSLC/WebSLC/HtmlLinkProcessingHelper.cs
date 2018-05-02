@@ -7,7 +7,7 @@ using System.IO;
 
 namespace WebSLC
 {
-    public class LinkProcessingHelper
+    public class HtmlLinkProcessingHelper
     {
         private readonly IEnumerable<string> _linkElements = new List<string>() { "link", "script", "img", "a", };
 
@@ -17,9 +17,9 @@ namespace WebSLC
 
         private readonly DomainSwitchParameter _domainSwitchParameter;
 
-        public LinkProcessingHelper(){}
+        public HtmlLinkProcessingHelper(){}
 
-        public LinkProcessingHelper(IEnumerable<string> excludedFromSearchExtensions,
+        public HtmlLinkProcessingHelper(IEnumerable<string> excludedFromSearchExtensions,
             DomainSwitchParameter domainSwitchParameter = DomainSwitchParameter.WithoutRestrictions)
         {
             _excludedExtensions = excludedFromSearchExtensions;
