@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Dapper;
 using ORMSample.Domain;
 using Dapper.Contrib.Extensions;
+using ORMSample.Interfaces;
 
 namespace ORMSample
 {

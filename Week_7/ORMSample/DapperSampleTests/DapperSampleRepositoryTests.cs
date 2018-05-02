@@ -11,10 +11,11 @@ namespace ORMSampleTests
     public class DapperSampleRepositoryTests
     {
         private readonly DapperSampleRepository _dapperQueries;
+        private const string ConnectionString = @"";//required
 
         public DapperSampleRepositoryTests()
         {
-            _dapperQueries = new DapperSampleRepository(@"");//pass database connection string
+            _dapperQueries = new DapperSampleRepository(ConnectionString);
         }
 
         [TestMethod]
