@@ -14,14 +14,31 @@ namespace BasicSerialization
     {
         static void Main(string[] args)
         {
-            const string filePath = @"D:\CDP\.net_tasks\Week_13\BasicSerialization\BasicSerialization\Resources\books.xml";
+            Catalog catalog;
+
+            string resourcesDirectory = Directory.GetCurrentDirectory() + @"..\..\..\Resources\";
+            string initialFilePath = resourcesDirectory + "books.xml";
 
             XmlSerializer serializer = new XmlSerializer(typeof(Catalog));
-            using (var stream = new FileStream(filePath, FileMode.Open))
+            using (var stream = new FileStream(initialFilePath, FileMode.Open))
             {
-                var result = serializer.Deserialize(stream);
+                catalog = serializer.Deserialize(stream) as Catalog;
             }
-                
+
+            if(catalog != null)
+            {
+                Book book = new Book() { Id = "1231", Publisher = "David Allen" };
+
+                catalog.Books.Add(book);
+
+                string serializedFilePath = resourcesDirectory + "booksSerialized.xml";
+
+                using (var stream = new FileStream(serializedFilePath, FileMode.Create))
+                {
+                    serializer.Serialize(stream, catalog);
+                }
+            }
+                  
         }
     }
 }
