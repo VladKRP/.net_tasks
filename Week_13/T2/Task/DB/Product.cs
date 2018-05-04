@@ -5,8 +5,10 @@ namespace Task.DB
     using System.ComponentModel.DataAnnotations;
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Data.Entity.Spatial;
+    using System.Runtime.Serialization;
 
-    public partial class Product
+    [Serializable]
+    public partial class Product: ISerializable
     {
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public Product()
@@ -44,5 +46,39 @@ namespace Task.DB
         public virtual ICollection<Order_Detail> Order_Details { get; set; }
 
         public virtual Supplier Supplier { get; set; }
+
+        private Product(SerializationInfo info, StreamingContext context)
+        {
+            ProductID = info.GetInt32("ProductID");
+            ProductName = info.GetString("ProductName");
+            SupplierID = info.GetInt32("SupplierID");
+            CategoryID = info.GetInt32("CategoryID");
+            QuantityPerUnit = info.GetString("QuantityPerUnit");
+            UnitPrice = info.GetInt32("UnitPrice");
+            UnitsInStock = info.GetInt16("UnitsInStock");
+            UnitsOnOrder = info.GetInt16("UnitsOnOrder");
+            ReorderLevel = info.GetInt16("ReorderLevel");
+            Discontinued = info.GetBoolean("Discontinued");
+            Category = info.GetValue("Category", typeof(Category)) as Category;
+            Order_Details = info.GetValue("Order_Details", typeof(ICollection<Order_Detail>)) as ICollection<Order_Detail>;
+            Supplier = info.GetValue("Supplier", typeof(Supplier)) as Supplier;
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            info.AddValue("ProductID", ProductID);
+            info.AddValue("ProductName", ProductName);
+            info.AddValue("SupplierID", SupplierID);
+            info.AddValue("CategoryID", CategoryID);
+            info.AddValue("QuantityPerUnit", QuantityPerUnit);
+            info.AddValue("UnitPrice", UnitPrice);
+            info.AddValue("UnitsInStock", UnitsInStock);
+            info.AddValue("UnitsOnOrder", UnitsOnOrder);
+            info.AddValue("ReorderLevel", ReorderLevel);
+            info.AddValue("Discontinued", Discontinued);
+            info.AddValue("Category", Category);
+            info.AddValue("Order_Details", Order_Details);
+            info.AddValue("Supplier", Supplier);
+        }
     }
 }
