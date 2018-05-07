@@ -12,47 +12,53 @@ using System.Xml;
 
 namespace CachingSolutionsSamples.CacheEngines
 {
-	class GeneralRedisCache<T> : ICache<T>
-	{
-		private readonly ConnectionMultiplexer redisConnection;
+    class GeneralRedisCache<T> : IRedisCache<T>
+    {
+        private readonly ConnectionMultiplexer redisConnection;
         private readonly string prefix;
         private readonly DataContractSerializer serializer;
 
-		public GeneralRedisCache(string hostName)
-		{   
-			redisConnection = ConnectionMultiplexer.Connect(hostName);
+        public GeneralRedisCache(string hostName)
+        {
+            redisConnection = ConnectionMultiplexer.Connect(hostName);
             serializer = new DataContractSerializer(typeof(IEnumerable<T>));
             prefix = typeof(T).Name;
         }
 
         public IEnumerable<T> Get(string forUser)
-		{
-			var database = redisConnection.GetDatabase();
-			byte[] s = database.StringGet(prefix + forUser);
-			if (s == null)
-				return null;
+        {
+            var database = redisConnection.GetDatabase();
+            byte[] entities = database.StringGet(prefix + forUser);
+            if (entities == null)
+                return null;
 
-			return (IEnumerable<T>)serializer
-				.ReadObject(new MemoryStream(s));
+            return (IEnumerable<T>)serializer
+                .ReadObject(new MemoryStream(entities));
 
-		}
+        }
 
-		public void Set(string forUser, IEnumerable<T> entities)
-		{
-			var database = redisConnection.GetDatabase();
-			var key = prefix + forUser;
+        public void Set(string forUser, IEnumerable<T> entities, DateTime? expiry = null)
+        {
+            var database = redisConnection.GetDatabase();
+            var key = prefix + forUser;
 
-			if (entities == null)
-			{
-				database.StringSet(key, RedisValue.Null);
-			}
-			else
-			{
-				var stream = new MemoryStream();
-				serializer.WriteObject(stream, entities);
-				database.StringSet(key, stream.ToArray(), TimeSpan.FromMinutes(1));
-			}
-		}
+            if (entities != null)
+            {
+                var stream = new MemoryStream();
+                serializer.WriteObject(stream, entities);
+
+                var currentDate = DateTime.UtcNow;
+                if (expiry.HasValue && expiry.Value > currentDate)
+                {
+                    var remaining = expiry.Value - currentDate;
+                    database.StringSet(key, stream.ToArray(), remaining);
+                }
+                else
+                    database.StringSet(key, stream.ToArray());
+            }
+            else
+                database.StringSet(key, RedisValue.Null);
+        }
 
         public void Delete(string forUser)
         {

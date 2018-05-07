@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 
 namespace CachingSolutionsSamples.CacheEngines
 {
-	public interface ICache<T>
+    interface ICache<T>
 	{
 		IEnumerable<T> Get(string forUser);
-		void Set(string forUser, IEnumerable<T> entities);
+		void Set(string forUser, IEnumerable<T> entities, DateTime? expiry);
         void Delete(string forUser);
 	}
 }

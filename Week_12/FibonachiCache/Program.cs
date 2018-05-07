@@ -12,27 +12,53 @@ namespace FibonachiCache
     {
         static void Main(string[] args)
         {
-
+            //Memory cache
             MemoryCache memoryCache = new MemoryCache("fibo-cache");
 
-            CalculateFibonachiNumber(4, memoryCache);
-            CalculateFibonachiNumber(4, memoryCache);
-            CalculateFibonachiNumber(13, memoryCache);
-            CalculateFibonachiNumber(13, null);
+            CalculateFibonachiNumberMemoryCache(4, memoryCache);
+            CalculateFibonachiNumberMemoryCache(4, memoryCache);
+            CalculateFibonachiNumberMemoryCache(13, memoryCache);
+            CalculateFibonachiNumberMemoryCache(13, null);
+
+            //Redis cache
+
+            const string hostname = "localhost";
+            ConnectionMultiplexer connectionMultiplexer = ConnectionMultiplexer.Connect(hostname);
+            var redisCache = connectionMultiplexer.GetDatabase();
+
+            CalculateFibonachiNumberRedisCache(4, redisCache);
+            CalculateFibonachiNumberRedisCache(4, redisCache);
+
         }
 
-        public static int CalculateFibonachiNumber(int n, MemoryCache cache)
+        public static int CalculateFibonachiNumberMemoryCache(int n, MemoryCache cache)
         {
-            var cachedValue = cache?.Get(n.ToString()) as Nullable<int>;
+            var cacheKey = cache?.Name + n;
+
+            var cachedValue = cache?.Get(cacheKey) as Nullable<int>;
             if (cachedValue.HasValue)
                     return cachedValue.Value;
 
-            var result = CalculateFibonachiNumber(n);
+            var calculationResult = CalculateFibonachiNumber(n);
 
-            if(cache != null)
-                cache.Add(new CacheItem(n.ToString(), result), new CacheItemPolicy());
+                cache?.Set(cacheKey, calculationResult, new DateTimeOffset(DateTime.UtcNow.AddMinutes(5)));
 
-            return result;
+            return calculationResult;
+        }
+
+        public static int CalculateFibonachiNumberRedisCache(int n, IDatabase cache)
+        {
+            var cacheKey = "fibo-cache" + n;
+
+            string cachedValue = cache?.StringGet(cacheKey);
+            if (!string.IsNullOrWhiteSpace(cachedValue) && int.TryParse(cachedValue, out int result))
+                return result;
+
+            var calculationResult = CalculateFibonachiNumber(n);
+
+            cache?.StringSet(cacheKey, calculationResult);
+
+            return calculationResult;
         }
 
         public static int CalculateFibonachiNumber(int n)

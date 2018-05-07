@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace CachingSolutionsSamples.Managers
+namespace CachingSolutionsSamples.CacheEngines
 {
-    interface IManager<T>
+    interface IRedisCache<T>: ICache<T>
     {
-        IEnumerable<T> GetAll();
-        void DeleteAll();
     }
 }
