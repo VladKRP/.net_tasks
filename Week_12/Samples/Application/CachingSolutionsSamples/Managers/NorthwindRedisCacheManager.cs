@@ -31,7 +31,7 @@ namespace CachingSolutionsSamples.Managers
 
                 using (var context = new Northwind())
                 {
-                    context.Configuration.LazyLoadingEnabled = false;//getting troubles with Employee entity
+                    context.Configuration.LazyLoadingEnabled = false;
                     context.Configuration.ProxyCreationEnabled = false;
                     entities = context.Set<T>().ToList();
                     _cache.Set(user, entities, _cacheExpiryDate);

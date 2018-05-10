@@ -15,7 +15,8 @@ namespace CachingSolutionsSamples.Managers
     {
         protected readonly IMemoryCache<T> _cache;
         private readonly DateTime? _cacheExpiryDate;
-        private readonly CacheItemPolicy _cachePolicy;
+        private ChangeMonitor _changeMonitor;
+        //private CacheItemPolicy _cacheItemPolicy;
 
         public NorthwindMemoryCacheManager(IMemoryCache<T> cache){
             _cache = cache;
@@ -27,10 +28,16 @@ namespace CachingSolutionsSamples.Managers
             _cacheExpiryDate = cacheExpiryDate;
         }
 
-        public NorthwindMemoryCacheManager(IMemoryCache<T> cache, CacheItemPolicy cachePolicy)
+        //public NorthwindMemoryCacheManager(IMemoryCache<T> cache, CacheItemPolicy cacheItemPolicy)
+        //{
+        //    _cache = cache;
+        //    _cacheItemPolicy = cacheItemPolicy;
+        //}
+
+        public NorthwindMemoryCacheManager(IMemoryCache<T> cache, ChangeMonitor changeMonitor)
         {
             _cache = cache;
-            _cachePolicy = cachePolicy;
+            _changeMonitor = changeMonitor;
         }
 
         public IEnumerable<T> GetAll()
@@ -38,17 +45,21 @@ namespace CachingSolutionsSamples.Managers
             var user = Thread.CurrentPrincipal.Identity.Name;
             var entities = _cache.Get(user);
 
-            if (entities == null)
-            {
+            if (entities == null || (_changeMonitor != null && _changeMonitor.HasChanged))//exception
+            {                    
                 Console.WriteLine("From DB");//for test
-
+               
                 using (var context = new Northwind())
                 {
-                    context.Configuration.LazyLoadingEnabled = false;//getting troubles with Employee entity
+                    context.Configuration.LazyLoadingEnabled = false;
                     context.Configuration.ProxyCreationEnabled = false;
                     entities = context.Set<T>().ToList();
-                    if(_cachePolicy != null)
-                        _cache.Set(user, entities, _cachePolicy);
+                    if(_changeMonitor != null)
+                    {
+                        CacheItemPolicy cachePolicy = new CacheItemPolicy();
+                        _cache.Set(user, entities, cachePolicy);
+                        cachePolicy.ChangeMonitors.Add(_changeMonitor);
+                    }
                     else
                         _cache.Set(user, entities, _cacheExpiryDate);
                 }

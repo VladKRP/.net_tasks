@@ -14,20 +14,43 @@ namespace CachingSolutionsSamples
 	public class CacheTests
 	{
         private const string redisHostname = "localhost";
+        private const string mssqlConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Northwind;
+                                                        Integrated Security=True;Encrypt=False;
+                                                        TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
 
         public CacheTests()
         {
-            Redis_CacheCleanup();
+            //Redis_CacheCleanup();
         }
 
         [TestMethod]
 		public void MemoryCache_Categories()
 		{
+            
+            string sqlQuery = "select CategoryID, CategoryName, Description, Picture from dbo.Categories";
+         
+            using (SqlConnection sqlConnection = new SqlConnection(mssqlConnectionString))
+            {
+                using (SqlCommand sqlCommand = new SqlCommand(sqlQuery, sqlConnection))
+                {
+                    sqlCommand.Notification = null;
 
-            var policy = new CacheItemPolicy();
-            policy.ChangeMonitors.Add(new SqlChangeMonitor(new SqlDependency(new SqlCommand("select * from Categories"))));
-			var manager = new NorthwindMemoryCacheManager<Category>(new GeneralInMemoryCache<Category>(), policy);
-            CacheRunner(manager);
+                    SqlDependency sqlDependency = new SqlDependency(sqlCommand);
+                    SqlDependency.Start(mssqlConnectionString);
+
+                    sqlConnection.Open();
+                    var executionResult = sqlCommand.ExecuteScalar();
+
+                    SqlChangeMonitor sqlChangeMonitor = new SqlChangeMonitor(sqlDependency);
+
+                    var manager = new NorthwindMemoryCacheManager<Category>(new GeneralInMemoryCache<Category>(), sqlChangeMonitor);
+                    CacheRunner<Category>(manager);
+
+                    //SqlDependency.Stop(mssqlConnectionString);
+                    //sqlConnection.Close();    
+
+                }   
+            }
         }
 
         [TestMethod]
@@ -54,7 +77,7 @@ namespace CachingSolutionsSamples
         [TestMethod]
 		public void RedisCache_Categories()
 		{
-			var manager = new NorthwindRedisCacheManager<Category>(new GeneralRedisCache<Category>(redisHostname), DateTime.UtcNow.AddSeconds(5));
+			var manager = new NorthwindRedisCacheManager<Category>(new GeneralRedisCache<Category>(redisHostname), DateTime.UtcNow.AddSeconds(10));
             CacheRunner(manager);
 		}
 
