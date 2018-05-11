@@ -11,9 +11,7 @@ namespace WebSLC.Utilily
     {
         static void Main(string[] args)
         {
-            ServicePointManager.Expect100Continue = true;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-
+            
             Console.ForegroundColor = ConsoleColor.DarkYellow;
 
             string[] resources = { "https://habrahabr.ru/company/infopulse/blog/261097/" };
@@ -21,7 +19,7 @@ namespace WebSLC.Utilily
 
            string[] excludedFormats = {};
         
-            HtmlLinkProcessingHelper linkAnalyzer = new HtmlLinkProcessingHelper(excludedFormats, DomainSwitchParameter.WithoutRestrictions);
+            LinkManager linkAnalyzer = new LinkManager(excludedFormats, DomainSwitchParameter.WithoutRestrictions);
             WebsiteDownloader downloader = new WebsiteDownloader(defaultPath, linkAnalyzer);
 
             //string[] excludedFormats = { ".png", ".jpg" };
@@ -34,7 +32,8 @@ namespace WebSLC.Utilily
             downloader.LinkFound += (object o, EventArgs arg) => Console.WriteLine("Link found");
             downloader.DomainSwitchRestrictionFound += (object o, RestrictionArgs arg) => Console.WriteLine($"Domain restricted: {arg.Entity}");
 
-            downloader.DownloadWebpageAsync(resources[0], 2).Wait();
+                downloader.DownloadWebpageAsync(resources[0], 1).Wait();
+            
 
         }
     }

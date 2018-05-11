@@ -7,8 +7,10 @@ using System.IO;
 
 namespace WebSLC
 {
-    public class HtmlLinkProcessingHelper
+    public class LinkManager
     {
+        //local href
+
         private readonly IEnumerable<string> _linkElements = new List<string>() { "link", "script", "img", "a", };
 
         private readonly IEnumerable<string> _linkAttributes = new List<string>() { "src", "href" };
@@ -17,16 +19,16 @@ namespace WebSLC
 
         private readonly DomainSwitchParameter _domainSwitchParameter;
 
-        public HtmlLinkProcessingHelper(){}
+        public LinkManager() { }
 
-        public HtmlLinkProcessingHelper(IEnumerable<string> excludedFromSearchExtensions,
+        public LinkManager(IEnumerable<string> excludedFromSearchExtensions,
             DomainSwitchParameter domainSwitchParameter = DomainSwitchParameter.WithoutRestrictions)
         {
             _excludedExtensions = excludedFromSearchExtensions;
             _domainSwitchParameter = domainSwitchParameter;
         }
 
-        private IEnumerable<HtmlNode> GetPageLinkElements(string siteLayout)
+        private IEnumerable<HtmlNode> GetPageLinkNodes(string siteLayout)
         {
             HtmlDocument document = new HtmlDocument();
             document.LoadHtml(siteLayout);
@@ -36,14 +38,16 @@ namespace WebSLC
 
         public IEnumerable<string> GetPageLinks(string siteLayout)
         {
-            return GetPageLinkElements(siteLayout).SelectMany(link => link.Attributes)
-                                                  .Where(attribute => _linkAttributes.Any(lattr => lattr == attribute.Name))
-                                                  .Select(attribute => attribute.Value).Distinct();
+            return GetPageLinkNodes(siteLayout).SelectMany(link => link.Attributes)
+                                               .Where(attribute => _linkAttributes.Any(lattr => lattr == attribute.Name))
+                                               .Select(attribute => attribute.Value)
+                                               .Distinct()
+                                               .Where(link => !IsLinkFormatForbidden(link) && !IsLinkAnchor(link));
         }
 
         public IEnumerable<string> GetPageResourceLink(string siteLayout)
         {
-            return GetPageLinkElements(siteLayout).Where(link => link.Name != "a")
+            return GetPageLinkNodes(siteLayout).Where(link => link.Name != "a")
                                                   .SelectMany(link => link.Attributes)
                                                   .Where(attribute => _linkAttributes.Any(lattr => lattr == attribute.Name))
                                                   .Select(attribute => attribute.Value).Distinct();
@@ -52,7 +56,17 @@ namespace WebSLC
         public bool IsLinkFormatForbidden(string link)
         {
             var linkExtension = Path.GetExtension(link);
+            if (linkExtension == null)
+                return false;
             return _excludedExtensions.Any(extension => extension == linkExtension);
+        }
+
+        public bool IsLinkAnchor(string link)
+        {
+            bool isAnchor = false;
+            if (link.StartsWith("#"))
+                isAnchor = true;
+            return isAnchor;
         }
 
         public bool IsLinkDomainForbidden(Uri baseLink, Uri innerLink)
@@ -91,27 +105,27 @@ namespace WebSLC
             return document.DocumentNode.OuterHtml;
         }
 
-        public string ProcessLink(string domain, string link)
-        {
-            string result = null;
-            if (!string.IsNullOrEmpty(link))
-            {
-                if (link.StartsWith("//"))
-                    result = "http:" + link;
-                else if (link.StartsWith("/"))
-                    result = "http://" + domain + link;
-                else if (link.StartsWith("http"))
-                    result = link;
-            }
-            return result;
-        }
+        //public string ProcessLink(string domain, string link)
+        //{
+        //    string result = null;
+        //    if (!string.IsNullOrEmpty(link))
+        //    {
+        //        if (link.StartsWith("//"))
+        //            result = "http:" + link;
+        //        else if (link.StartsWith("/"))
+        //            result = "http://" + domain + link;
+        //        else if (link.StartsWith("http"))
+        //            result = link;
+        //    }
+        //    return result;
+        //}
 
-        public IEnumerable<string> ProcessLinks(string domain, IEnumerable<string> links)
-        {
-            IEnumerable<string> processedLinks = Enumerable.Empty<string>();
-            if(links.Any())
-                processedLinks = links.Select(link => ProcessLink(domain, link)).Where(link => link != null);
-            return processedLinks;
-        }
+        //public IEnumerable<string> ProcessLinks(string domain, IEnumerable<string> links)
+        //{
+        //    IEnumerable<string> processedLinks = Enumerable.Empty<string>();
+        //    if(links.Any())
+        //        processedLinks = links.Select(link => ProcessLink(domain, link)).Where(link => link != null);
+        //    return processedLinks;
+        //}
     }
 }

@@ -5,7 +5,7 @@ namespace WebSLC
 {
     public class HtmlAnalyzer
     {
-        public static bool IsHtmlPage(string siteLayout)
+        public static bool IsLayoutContainHtmlTag(string siteLayout)
         {
             var document = new HtmlDocument();
             document.LoadHtml(siteLayout);
@@ -16,7 +16,7 @@ namespace WebSLC
         {
             var document = new HtmlDocument();
             document.LoadHtml(siteLayout);
-            return document.DocumentNode.SelectSingleNode("/html/head/title").InnerText;
+            return document.DocumentNode?.SelectSingleNode("/html/head/title")?.InnerText;
         }  
     }
 }

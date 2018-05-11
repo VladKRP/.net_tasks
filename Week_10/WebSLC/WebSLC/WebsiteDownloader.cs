@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Net;
 
 namespace WebSLC
 {
@@ -13,7 +14,7 @@ namespace WebSLC
     {
         private readonly string _destinationPath;
 
-        private readonly HtmlLinkProcessingHelper _linkProcessingHelper;
+        private readonly LinkManager _linkManager;
 
         private readonly Regex fileNameCorrectingRegEx = new Regex("[/\\:?*\"<>|]+");
 
@@ -25,10 +26,10 @@ namespace WebSLC
         public EventHandler<RestrictionArgs> FormatRestrictionFound { get; set; }
         public EventHandler<RestrictionArgs> DomainSwitchRestrictionFound { get; set; }
 
-        public WebsiteDownloader(string destinationPath, HtmlLinkProcessingHelper linkAnalyzer)
+        public WebsiteDownloader(string destinationPath, LinkManager linkManager)
         {
             _destinationPath = destinationPath;
-            _linkProcessingHelper = linkAnalyzer;
+            _linkManager = linkManager;
         }
 
         public async Task DownloadWebpageAsync(string url, int depth = 0)
@@ -44,7 +45,7 @@ namespace WebSLC
             if (Path.HasExtension(url))
                 pageLayoutWithLocalLinks = bytePage;
             else
-                pageLayoutWithLocalLinks = System.Text.Encoding.UTF8.GetBytes(_linkProcessingHelper.ReplacePageLinksToLocal(_destinationPath, pageLayout));
+                pageLayoutWithLocalLinks = System.Text.Encoding.UTF8.GetBytes(_linkManager.ReplacePageLinksToLocal(_destinationPath, pageLayout));
 
 
             var downloadFilePath = GenerateLocalFullFilePath(url, pageLayout);
@@ -54,20 +55,20 @@ namespace WebSLC
 
             if (depth == 0)
             {
-                var pageLinks = _linkProcessingHelper.GetPageResourceLink(pageLayout);
+                var pageLinks = _linkManager.GetPageResourceLink(pageLayout);
                 if (pageLinks.Any())
                 {
-                    pageLinks = _linkProcessingHelper.ProcessLinks(baseUri.DnsSafeHost, pageLinks);
+                    //pageLinks = _linkManager.ProcessLinks(baseUri.DnsSafeHost, pageLinks);
                     await DownloadWebpageResourcesAsync(pageLinks, baseUri, 0);
                 }
 
             }
             else if (depth > 0)
             {
-                var pageLinks = _linkProcessingHelper.GetPageLinks(pageLayout);
+                var pageLinks = _linkManager.GetPageLinks(pageLayout);
                 if (pageLinks.Any())
                 {
-                    pageLinks = _linkProcessingHelper.ProcessLinks(baseUri.DnsSafeHost, pageLinks);
+                    //pageLinks = _linkManager.ProcessLinks(baseUri.DnsSafeHost, pageLinks);
                     await DownloadWebpageResourcesAsync(pageLinks, baseUri, depth);
                 }
             }
@@ -76,10 +77,10 @@ namespace WebSLC
 
         private async Task DownloadWebpageResourcesAsync(string pageLayout, Uri baseUri, Func<string, IEnumerable<string>> resourceFilterFunction, int depth)//??
         {
-            var pageLinks = _linkProcessingHelper.GetPageLinks(pageLayout);
+            var pageLinks = _linkManager.GetPageLinks(pageLayout);
             if (pageLinks.Any())
             {
-                pageLinks = _linkProcessingHelper.ProcessLinks(baseUri.DnsSafeHost, pageLinks);
+                //pageLinks = _linkManager.ProcessLinks(baseUri.DnsSafeHost, pageLinks);
                 await DownloadWebpageResourcesAsync(pageLinks, baseUri, depth);
             }
         }
@@ -91,9 +92,9 @@ namespace WebSLC
                 var linkUri = new Uri(link);
 
                 LinkFound.Invoke(this, new EventArgs());
-                if (_linkProcessingHelper.IsLinkFormatForbidden(link))
+                if (_linkManager.IsLinkFormatForbidden(link))
                     FormatRestrictionFound?.Invoke(this, new RestrictionArgs() { Entity = Path.GetExtension(link) });
-                else if (_linkProcessingHelper.IsLinkDomainForbidden(baseUri, linkUri))
+                else if (_linkManager.IsLinkDomainForbidden(baseUri, linkUri))
                     DomainSwitchRestrictionFound?.Invoke(this, new RestrictionArgs() { Entity = linkUri.DnsSafeHost });
                 else
                     await DownloadWebpageAsync(link, depth - 1);
@@ -102,7 +103,6 @@ namespace WebSLC
 
         private async Task<byte[]> DownloadPageAsync(string url)
         {
-
             byte[] page = { };
 
             using (HttpClient client = new HttpClient())
@@ -115,7 +115,7 @@ namespace WebSLC
         {
             var localPath = _destinationPath;
             var processedFileName = "";
-            if (HtmlAnalyzer.IsHtmlPage(pageLayout))
+            if (HtmlAnalyzer.IsLayoutContainHtmlTag(pageLayout))
                 processedFileName = HtmlAnalyzer.GetHtmlPageTitle(pageLayout) + ".html";
             else
             {

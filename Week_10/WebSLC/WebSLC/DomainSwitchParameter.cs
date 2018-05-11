@@ -5,6 +5,6 @@ namespace WebSLC
     {
         WithoutRestrictions,
         CurrentDomain,
-        BelowSourceUrlPath// wut???
+        BelowSourceUrlPath//contain same url path
     }
 }
