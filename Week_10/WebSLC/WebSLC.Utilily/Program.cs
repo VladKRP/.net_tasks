@@ -14,27 +14,34 @@ namespace WebSLC.Utilily
             
             Console.ForegroundColor = ConsoleColor.DarkYellow;
 
-            string[] resources = { "https://habrahabr.ru/company/infopulse/blog/261097/" };
+            string[] resources = { "https://www.epam.com/" };
             const string defaultPath = @"D:\CDP\.net_tasks\Week_10\Downloads\";
 
-           string[] excludedFormats = {};
-        
-            LinkManager linkAnalyzer = new LinkManager(excludedFormats, DomainSwitchParameter.WithoutRestrictions);
+
+
+            HtmlLinkManager linkAnalyzer = new HtmlLinkManager(domainSwitchParameter: DomainSwitchParameter.WithoutRestrictions);
+
+
             WebsiteDownloader downloader = new WebsiteDownloader(defaultPath, linkAnalyzer);
 
-            //string[] excludedFormats = { ".png", ".jpg" };
-            //LinkProcessingHelper linkAnalyzerDomainRestriction = new LinkProcessingHelper(excludedFormats, DomainSwitchParameter.CurrentDomain);
-            //WebsiteDownloader downloader = new WebsiteDownloader(defaultPath, linkAnalyzerDomainRestriction);
-
-            downloader.WebpageDownloadStarted += (object o, DownloadArgs arg) => System.Console.WriteLine($"\nDownload started\nLink: {arg.Link}\nTime: {arg.Time}\n");
+            downloader.WebpageDownloadStarted += (object o, DownloadArgs arg) => System.Console.WriteLine($"\nDownload started\nLink: {arg.Link}\nTime: {arg.Time}\nDepth:{arg.Depth}");
             downloader.WebpageDownloadCompleted += (object o, DownloadArgs arg) => System.Console.WriteLine($"\nDownload ended\nLink: {arg.Link}\nTime: {arg.Time}\n");
-            downloader.FormatRestrictionFound += (object o, RestrictionArgs arg) => System.Console.WriteLine($"Link extension restricted: {arg.Entity}");
-            downloader.LinkFound += (object o, EventArgs arg) => Console.WriteLine("Link found");
-            downloader.DomainSwitchRestrictionFound += (object o, RestrictionArgs arg) => Console.WriteLine($"Domain restricted: {arg.Entity}");
 
-                downloader.DownloadWebpageAsync(resources[0], 1).Wait();
-            
+            downloader.DownloadWebpageAsync(resources[0], 1).Wait();
 
+            // downloader.DownloadWebpageAsync(resources[0], 1).Wait();
+
+            //string[] excludedFormats = { ".jpg" };
+            //LinkManager linkAnalyzerWithRestrictions = new LinkManager(excludedFormats, DomainSwitchParameter.CurrentDomain);
+
+            //WebsiteDownloader downloaderWithRestrictions = new WebsiteDownloader(defaultPath, linkAnalyzerWithRestrictions);
+
+            //downloaderWithRestrictions.WebpageDownloadStarted += (object o, DownloadArgs arg) => System.Console.WriteLine($"\nDownload started\nLink: {arg.Link}\nTime: {arg.Time}\nDepth:{arg.Depth}");
+            //downloaderWithRestrictions.WebpageDownloadCompleted += (object o, DownloadArgs arg) => System.Console.WriteLine($"\nDownload ended\nLink: {arg.Link}\nTime: {arg.Time}\n");
+
+            //downloaderWithRestrictions.DownloadWebpageAsync(resources[1], 1).Wait();
+
+            Console.ReadLine();
         }
     }
 }
