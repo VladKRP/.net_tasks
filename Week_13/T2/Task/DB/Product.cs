@@ -1,3 +1,5 @@
+using Task.DB;
+
 namespace Task.DB
 {
     using System;
@@ -59,9 +61,40 @@ namespace Task.DB
             UnitsOnOrder = info.GetInt16("UnitsOnOrder");
             ReorderLevel = info.GetInt16("ReorderLevel");
             Discontinued = info.GetBoolean("Discontinued");
-            Category = info.GetValue("Category", typeof(Category)) as Category;
-            Order_Details = info.GetValue("Order_Details", typeof(ICollection<Order_Detail>)) as ICollection<Order_Detail>;
-            Supplier = info.GetValue("Supplier", typeof(Supplier)) as Supplier;
+            Category = LoadCategoryWithoutProducts();
+            Order_Details = LoadOrderDetailsWithoutReferences();
+            Supplier = LoadSupplierWithoutProducts();
+
+            Category LoadCategoryWithoutProducts(){
+                var category = info.GetValue("Category", typeof(Category)) as Category;
+                if (category != null && category.Products.Count > 0)
+                {
+                    category.Products = new List<Product>();
+                }
+                return category;
+            }
+
+            ICollection<Order_Detail> LoadOrderDetailsWithoutReferences()
+            {
+                var order_details = info.GetValue("Order_Details", typeof(ICollection<Order_Detail>)) as ICollection<Order_Detail>;
+                if(order_details != null && order_details.Count > 0)
+                {
+                    foreach(var orderDetail in order_details)
+                    {
+                        orderDetail.Order = null;
+                        orderDetail.Product = null;
+                    }
+                }
+                return order_details;
+            }
+
+            Supplier LoadSupplierWithoutProducts()
+            {
+                var supplier = info.GetValue("Supplier", typeof(Supplier)) as Supplier;
+                if(supplier != null && supplier.Products.Count > 0)
+                    supplier.Products = new List<Product>();
+                return supplier;
+            }
         }
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)

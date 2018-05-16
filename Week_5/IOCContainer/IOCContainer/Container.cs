@@ -10,8 +10,7 @@ namespace IOCContainer
 {
     public class Container
     {
-        public IDictionary<Type, Type> TypeResolvers { get; private set; }
-
+        public IDictionary<Type, Type> TypeResolvers { get; }
         public Container()
         {
             TypeResolvers = new Dictionary<Type, Type>();
@@ -54,7 +53,7 @@ namespace IOCContainer
                 throw new ArgumentNullException();
             else if (type.IsAbstract || type.IsInterface)
                 throw new AbstractionResolvingException(type, "Can't add abstract class or interface as resolver");
-            else if (!TypeResolvers.Keys.Contains(baseType) && !TypeResolvers.Values.Contains(type))
+            else if (!TypeResolvers.Keys.Contains(baseType))
                 TypeResolvers.Add(baseType, type);
         }
 

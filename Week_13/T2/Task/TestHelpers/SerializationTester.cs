@@ -35,7 +35,7 @@ namespace Task.TestHelpers
 			stream.Seek(0, SeekOrigin.Begin);
 			Console.WriteLine("Start deserialization");
 			TData result = Deserialization(stream);
-			Console.WriteLine("Deserialization finished");
+	        Console.WriteLine("Deserialization finished");
 
 			return result;
 		}
