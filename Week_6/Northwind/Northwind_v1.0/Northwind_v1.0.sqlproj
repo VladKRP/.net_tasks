@@ -160,6 +160,5 @@
     <Build Include="dbo\Stored Procedures\Sales by Year.sql" />
     <Build Include="dbo\Stored Procedures\SalesByCategory.sql" />
     <Build Include="dbo\Stored Procedures\Ten Most Expensive Products.sql" />
-    <Build Include="dbo\Tables\EmployeeCreditCards.sql" />
   </ItemGroup>
 </Project>
