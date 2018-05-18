@@ -28,66 +28,66 @@ namespace FolderListenerTests
 
 
         [TestMethod]
-        public void GetNextIndexOfFileInFolder_FilesNotFound_ReturnNull()
+        public void GetNextIndexOfFileInDirectory_FilesNotFound_ReturnNull()
         {
-            var result = _fileNameManager.GetNextIndexOfFileInFolder(DummyDirectories.documentsFolder, "Amigo.exe");
+            var result = _fileNameManager.GetNextIndexOfFileInDirectory(DummyDirectories.documentsFolder, "Amigo.exe");
 
             Assert.IsNull(result);
         }
 
         [TestMethod]
-        public void GetNextIndexOfFileInFolder_HasOneFileWithoutIndex_Return1()
+        public void GetNextIndexOfFileInDirectory_HasOneFileWithoutIndex_Return1()
         {
-            var result = _fileNameManager.GetNextIndexOfFileInFolder(DummyDirectories.defaultsFolder, "Unity Player.exe");
+            var result = _fileNameManager.GetNextIndexOfFileInDirectory(DummyDirectories.defaultsFolder, "Unity Player.exe");
 
             Assert.IsNotNull(result);
             Assert.AreEqual(1, result);
         }
 
         [TestMethod]
-        public void GetNextIndexOfFileInFolder_FiveSameFiles_MaxIndex4_Return5()
+        public void GetNextIndexOfFileInDirectory_FiveSameFiles_MaxIndex4_Return5()
         {
-            var result = _fileNameManager.GetNextIndexOfFileInFolder(DummyDirectories.defaultsFolder, "Amigo.exe");
+            var result = _fileNameManager.GetNextIndexOfFileInDirectory(DummyDirectories.defaultsFolder, "Amigo.exe");
 
             Assert.IsNotNull(result);
             Assert.AreEqual(5, result);
         }
 
         [TestMethod]
-        public void GetNextIndexOfFileInFolder_TwoSameFile_MaxIndex3_Return4()
+        public void GetNextIndexOfFileInDirectory_TwoSameFile_MaxIndex3_Return4()
         {
-            var result = _fileNameManager.GetNextIndexOfFileInFolder(DummyDirectories.documentsFolder, "Schedule.docx");
+            var result = _fileNameManager.GetNextIndexOfFileInDirectory(DummyDirectories.documentsFolder, "Schedule.docx");
 
             Assert.IsNotNull(result);
             Assert.AreEqual(4, result);
         }
 
         [TestMethod]
-        public void GetNextSerialNumberOfFileInFolder_FolderContainFileWithSerialNumber_Return2()
+        public void GetNextSerialNumberOfFileInDirectory_FolderContainFileWithSerialNumber_Return2()
         {
-            var result = _fileNameManager.GetNextSerialNumberOfFileInFolder(DummyDirectories.presentationsFolder);
+            var result = _fileNameManager.GetNextSerialNumberOfFileInDirectory(DummyDirectories.presentationsFolder);
 
             Assert.AreEqual(2, result);
         }
 
         [TestMethod]
-        public void GetNextSerialNumberOfFileInFolder_FolderNotContainFilesWithSerialNumbers_Return1()
+        public void GetNextSerialNumberOfFileInDirectory_FolderNotContainFilesWithSerialNumbers_Return1()
         {
-            var result = _fileNameManager.GetNextSerialNumberOfFileInFolder(DummyDirectories.documentsFolder);
+            var result = _fileNameManager.GetNextSerialNumberOfFileInDirectory(DummyDirectories.documentsFolder);
 
             Assert.AreEqual(1, result);
         }
 
         [TestMethod]
-        public void GetNextSerialNumberOfFileInFolder_FolderContainFileWithSerialNumber22_Return23()
+        public void GetNextSerialNumberOfFileInDirectory_FolderContainFileWithSerialNumber22_Return23()
         {
-            var result = _fileNameManager.GetNextSerialNumberOfFileInFolder(DummyDirectories.defaultsFolder);
+            var result = _fileNameManager.GetNextSerialNumberOfFileInDirectory(DummyDirectories.defaultsFolder);
 
             Assert.AreEqual(23, result);
         }
 
         [TestMethod]
-        public void ChangeResultFileName_WithSerialNumber_ReturnNameWithSerialNumber2()
+        public void ChangeFileName_WithSerialNumber_ReturnNameWithSerialNumber2()
         {
             RuleElement rule = new RuleElement()
             {
@@ -97,14 +97,14 @@ namespace FolderListenerTests
             };
             var file = new FileInfoBaseBuilder().SetName("Arrays and Collections.pptx").Build();
 
-            var result = _fileNameManager.ChangeResultFileName(file, defaultsFolder, rule);
+            var result = _fileNameManager.ChangeFileName(file, defaultsFolder, rule);
 
             Assert.IsNotNull(result);
             Assert.AreEqual("2.Arrays and Collections.pptx", result);
         }
 
         [TestMethod]
-        public void ChangeResultFileName_WithSerialNumber_ReturnNameWithSerialNumber1()
+        public void ChangeFileName_WithSerialNumber_ReturnNameWithSerialNumber1()
         {
             RuleElement rule = new RuleElement()
             {
@@ -114,14 +114,14 @@ namespace FolderListenerTests
             };
             var file = new FileInfoBaseBuilder().SetName("Ideas.docx").Build();
 
-            var result = _fileNameManager.ChangeResultFileName(file, defaultsFolder, rule);
+            var result = _fileNameManager.ChangeFileName(file, defaultsFolder, rule);
 
             Assert.IsNotNull(result);
             Assert.AreEqual("1.Ideas.docx", result);
         }
 
         [TestMethod]
-        public void ChangeResultFileName_WithLastModifyDate_ReturnNameWithDate()
+        public void ChangeFileName_WithLastModifyDate_ReturnNameWithDate()
         {
             RuleElement rule = new RuleElement()
             {
@@ -131,21 +131,21 @@ namespace FolderListenerTests
             };
             var file = new FileInfoBaseBuilder().SetName("Ideas.docx").Build();
 
-            var result = _fileNameManager.ChangeResultFileName(file, defaultsFolder, rule);
+            var result = _fileNameManager.ChangeFileName(file, defaultsFolder, rule);
             
             Assert.IsNotNull(result);
             Assert.AreEqual($"Ideas {DateTime.Now.ToShortDateString()}.docx", result);
         }
 
         [TestMethod]
-        public void ChangeResultFileName_WithoutRule_ReturnName()
+        public void ChangeFileName_WithoutRule_ReturnName()
         {
             var file = new FileInfoBaseBuilder().SetName("Schedule (1).docx").Build();
 
-            var result = _fileNameManager.ChangeResultFileName(file, defaultsFolder);
+            var result = _fileNameManager.ChangeFileName(file, defaultsFolder);
 
             Assert.IsNotNull(result);
-            Assert.AreEqual($"Schedule .docx", result);
+            Assert.AreEqual($"Schedule.docx", result);
         }
 
     }

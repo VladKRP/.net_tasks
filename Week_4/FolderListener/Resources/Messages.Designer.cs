@@ -61,6 +61,24 @@ namespace FolderListener.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to FolderListenerConfigurationSection cannot be null.
+        /// </summary>
+        internal static string ConfigurationArgumentNullException {
+            get {
+                return ResourceManager.GetString("ConfigurationArgumentNullException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File already placed in proper directory.
+        /// </summary>
+        internal static string FileAlreadyInProperFolder {
+            get {
+                return ResourceManager.GetString("FileAlreadyInProperFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Change file name rules.
         /// </summary>
         internal static string FileChangeRules {
@@ -115,6 +133,15 @@ namespace FolderListener.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to File name changed.
+        /// </summary>
+        internal static string FileNameChanged {
+            get {
+                return ResourceManager.GetString("FileNameChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Is serial number in name enabled?.
         /// </summary>
         internal static string FileSerialNumber {
@@ -124,11 +151,47 @@ namespace FolderListener.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Folder listening started.
+        /// </summary>
+        internal static string ListeningStarted {
+            get {
+                return ResourceManager.GetString("ListeningStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to New file found.
         /// </summary>
         internal static string NewFileFound {
             get {
                 return ResourceManager.GetString("NewFileFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No FileSystemWatchers configured to listen your folders..
+        /// </summary>
+        internal static string NoWatchersException {
+            get {
+                return ResourceManager.GetString("NoWatchersException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Such situation can appear when configuration file do not contain folders pathes to listen..
+        /// </summary>
+        internal static string NoWatchersExceptionDescription {
+            get {
+                return ResourceManager.GetString("NoWatchersExceptionDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Check project configuration file on section folderListenerConfigurationSection and folder pathes in it. While you not found such section or it empty, add section or folder pathes. .
+        /// </summary>
+        internal static string NoWatchersExceptionResolveCases {
+            get {
+                return ResourceManager.GetString("NoWatchersExceptionResolveCases", resourceCulture);
             }
         }
         
