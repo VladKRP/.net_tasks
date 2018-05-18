@@ -17,8 +17,8 @@ where r.RegionDescription = 'Western'
 ”пор€дочить результаты запроса по возрастанию количества заказов.
 */
 
-select c.ContactName as 'Customer Name', count(o.OrderID) as 'Orders Amount' 
+select c.ContactName as 'Customer Name' , count(o.OrderID) as 'Orders Amount' 
 from Northwind.Northwind.Customers as c 
 left join Northwind.Northwind.Orders as o on c.CustomerID = o.CustomerID
-group by c.ContactName
+group by c.CustomerID,c.ContactName,c.CompanyName
 order by 'Orders Amount'
