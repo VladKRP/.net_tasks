@@ -31,7 +31,7 @@ order by oa.Amount desc
 
 select EmployeeID as 'Seller', CustomerID as 'Customer', count(EmployeeID) as 'Orders Amount'
 from Northwind.Northwind.Orders 
-where OrderDate between '1998-01-01' and '1998-12-31' 
+where YEAR(OrderDate) = 1998
 group by EmployeeID,CustomerID
 
 --4.	Найти покупателей и продавцов, которые живут в одном городе.

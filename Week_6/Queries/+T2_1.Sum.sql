@@ -1,7 +1,7 @@
 --1.	Найти общую сумму всех заказов из таблицы Order Details с учетом количества закупленных товарови скидок по ним. 
 -- Результатом запроса должна быть одна запись с одной колонкой с названием колонки 'Totals'.
 
-select sum(UnitPrice * Quantity - (UnitPrice * Quantity * Discount)) 'Totals'
+select sum(UnitPrice * Quantity *(1 - Discount)) 'Totals'
 from Northwind.Northwind.[Order Details]
 
 --2.	По таблице Orders найти количество заказов, которые еще не были доставлены 
