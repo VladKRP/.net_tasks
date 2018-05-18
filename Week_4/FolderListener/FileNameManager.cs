@@ -18,86 +18,102 @@ namespace FolderListener
             _fileSystem = fileSystem ?? new FileSystem();
         }
 
-        public string ChangeResultFileName(FileInfoBase fileInfo, FolderElement defaultFolder, RuleElement rule = null)
+        public string ChangeFileName(FileInfoBase fileInfo, FolderElement defaultFolder, RuleElement rule = null)
         {
-            DirectoryInfoBase destinationFolder;
-            var resultFileName = GetFileNameWithoutExtensionAndIndex(fileInfo.Name);
+            DirectoryInfoBase destinationDirectory = GetFileDestinationDirectory(rule);
+            var changedFileName = GetFileNameWithoutExtensionAndIndex(fileInfo.Name).Trim();
 
             if (rule != null)
+                changedFileName = ChangeFileNameAccordingRule(changedFileName, destinationDirectory, rule);
+
+            var index = GetNextIndexOfFileInDirectory(destinationDirectory, changedFileName + fileInfo.Extension);
+            changedFileName += (index != null ? $" ({index})" : "") + fileInfo.Extension;
+
+            return changedFileName;
+
+            DirectoryInfoBase GetFileDestinationDirectory(RuleElement ruleElement)
             {
-                destinationFolder = _fileSystem.DirectoryInfo.FromDirectoryName(rule.DestinationFolder);
-                if (rule.NameChangeRule.Equals(NameChangeRule.LastModifyDate))
-                    resultFileName += $" {DateTime.Now.ToShortDateString()}";
-                else if (rule.NameChangeRule.Equals(NameChangeRule.SerialNumber))
-                    resultFileName = $"{GetNextSerialNumberOfFileInFolder(destinationFolder)}.{resultFileName}";
+                DirectoryInfoBase directory = _fileSystem.DirectoryInfo.FromDirectoryName(defaultFolder.Path);
+                if (rule != null)
+                   directory = _fileSystem.DirectoryInfo.FromDirectoryName(rule.DestinationFolder);
+                return directory;
             }
-            else destinationFolder = _fileSystem.DirectoryInfo.FromDirectoryName(defaultFolder.Path);
 
-            var index = GetNextIndexOfFileInFolder(destinationFolder, resultFileName + fileInfo.Extension);
-            resultFileName += (index != null ? $" ({index})" : "") + fileInfo.Extension;
+            string GetFileNameWithoutExtensionAndIndex(string filename)
+            {
+                var result = new Regex(@"\(\d+\)").Replace(filename, "");
+                return Path.GetFileNameWithoutExtension(result);
+            }
 
-            return resultFileName;
-
+            string ChangeFileNameAccordingRule(string filename, DirectoryInfoBase directory, RuleElement ruleElement)
+            {
+                if (ruleElement.NameChangeRule.Equals(NameChangeRule.LastModifyDate))
+                    filename += $" {DateTime.Now.ToShortDateString()}";
+                else if (ruleElement.NameChangeRule.Equals(NameChangeRule.SerialNumber))
+                    filename = $"{GetNextSerialNumberOfFileInDirectory(directory)}.{filename}";
+                return filename;
+            }
         }
 
-        private string GetFileNameWithoutExtensionAndIndex(string filename)
-        {
-            var result = new Regex(@"\(\d+\)").Replace(filename, "");
-            return Path.GetFileNameWithoutExtension(result);
-        }
-
-
-        public int GetNextSerialNumberOfFileInFolder(DirectoryInfoBase destinationFolder)
+        public int GetNextSerialNumberOfFileInDirectory(DirectoryInfoBase directory)
         {
             int nextSerialNumber = 1;
 
-            var serialNumberRegExp = new Regex(@"^\d*[.]");
-            var serialNumberExtractingRegExp = new Regex(@"(^\d*)");
+            var filesSerialNumbers = GetFilesSerialNumbersInDirectory(directory);
 
-            var folderFilesSerialNumbers = destinationFolder.GetFiles()
-                                    .Where(file => serialNumberRegExp.Match(file.Name).Success)
-                                    .Select(file => serialNumberExtractingRegExp.Match(file.Name).Value)
-                                    .Where(snumber => snumber.All(c => char.IsDigit(c)))
-                                    .Select(snumber => int.Parse(snumber));
-
-            if (folderFilesSerialNumbers.Count() > 0)
-                nextSerialNumber = folderFilesSerialNumbers.Max() + 1;
+            if (filesSerialNumbers.Any())
+                nextSerialNumber = filesSerialNumbers.Max() + 1;
 
             return nextSerialNumber;
+
+            IEnumerable<int> GetFilesSerialNumbersInDirectory(DirectoryInfoBase filesDirectory)
+            {
+                var serialNumberExtractingRegExp = new Regex(@"(^\d+)");
+
+                var directoryFilesSerialNumbers = filesDirectory.GetFiles()
+                    .Select(file => serialNumberExtractingRegExp.Match(file.Name))
+                    .Where(match => match.Success)
+                    .Select(match => match.Value)
+                    .Select(snumber => int.Parse(snumber));
+                return directoryFilesSerialNumbers;
+            }
         }
 
-
-
-        public int? GetNextIndexOfFileInFolder(DirectoryInfoBase folder, string filename)
+        public int? GetNextIndexOfFileInDirectory(DirectoryInfoBase directory, string filename)
         {
             int? nextIndex = null;
             var indexRegExp = new Regex(@"\((\d*)\)");
+            IEnumerable<int> sameNameFilesIndexes;
 
-            var sameNameFiles = GetFilesWithSameNameAndExtensionInFolder(folder, filename);
-            var sameNameFilesIndexes = GetIndexesOfFilesWithSameNameAndExtension(sameNameFiles, indexRegExp);
+            var sameNameFiles = GetFilesWithSameNameAndExtensionInFolder(directory, filename);
+            if (sameNameFiles.Any())
+            {
+                sameNameFilesIndexes = GetIndexesOfFilesWithSameNameAndExtension(sameNameFiles, indexRegExp);
 
-            if (sameNameFilesIndexes.Count() > 0)
-                nextIndex = sameNameFilesIndexes.Max() + 1;
-            else if (sameNameFiles.Count() > sameNameFilesIndexes.Count())
-                nextIndex = 1;
+                if (sameNameFilesIndexes.Any())
+                    nextIndex = sameNameFilesIndexes.Max() + 1;
+                else
+                    nextIndex = 1;
+            }
+                
             return nextIndex;
+
+
+            IEnumerable<FileInfoBase> GetFilesWithSameNameAndExtensionInFolder(DirectoryInfoBase folder, string fileName)
+            {
+                var filenameWithoutExtension = Path.GetFileNameWithoutExtension(fileName);
+                var extension = Path.GetExtension(fileName);
+
+                return folder.GetFiles().Where(file => file.Name.Contains(filenameWithoutExtension) && file.Extension.Equals(extension));
+            }
+
+            IEnumerable<int> GetIndexesOfFilesWithSameNameAndExtension(IEnumerable<FileInfoBase> files, Regex regex)
+            {
+                return files.Select(file => regex.Match(file.Name)
+                            .Groups[1]?.Value)
+                            .Where(index => !string.IsNullOrWhiteSpace(index) && index.All(x => char.IsDigit(x)))
+                            .Select(index => int.Parse(index));
+            }
         }
-
-        private IEnumerable<FileInfoBase> GetFilesWithSameNameAndExtensionInFolder(DirectoryInfoBase folder, string filename)
-        {
-            var filenameWithoutExtension = Path.GetFileNameWithoutExtension(filename);
-            var extension = Path.GetExtension(filename);
-
-            return folder.GetFiles().Where(file => file.Name.Contains(filenameWithoutExtension) && file.Extension.Equals(extension));
-        }
-
-        private IEnumerable<int> GetIndexesOfFilesWithSameNameAndExtension(IEnumerable<FileInfoBase> files, Regex regex)
-        {
-            return files.Select(file => regex.Match(file.Name)
-                        .Groups[1]?.Value)
-                        .Where(index => !string.IsNullOrWhiteSpace(index) && index.All(x => char.IsDigit(x)))
-                        .Select(index => int.Parse(index));
-        }
-
     }
 }

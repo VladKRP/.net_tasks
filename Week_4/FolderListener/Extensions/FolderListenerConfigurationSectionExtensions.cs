@@ -24,5 +24,16 @@ namespace FolderListener.Extensions
                     yield return rule;
             }
         }
+
+        public static IEnumerable<FileIgnoreTemplate> GetIgnoreTemplates(this FolderListenerConfigurationSection configurations)
+        {
+            var ignoreTemplates = configurations.IgnoreTemplates;
+            if (ignoreTemplates != null)
+            {
+                foreach (FileIgnoreTemplate ignoreTemplate in ignoreTemplates)
+                    yield return ignoreTemplate;
+            }
+        }
+
     }
 }

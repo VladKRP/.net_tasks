@@ -36,5 +36,11 @@ namespace FolderListener.Configurations
             get { return (FolderElement)this["defaultFolder"]; }
         }
 
+        [ConfigurationCollection(typeof(FileIgnoreTemplate), AddItemName = "ignore")]
+        [ConfigurationProperty("ignoreTemplates")]
+        public FileIgnoreTemplateCollection IgnoreTemplates {
+            get { return (FileIgnoreTemplateCollection)this["ignoreTemplates"]; }
+        }
+
     }
 }
