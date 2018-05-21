@@ -9,6 +9,7 @@ using Dapper;
 using ORMSample.Domain;
 using Dapper.Contrib.Extensions;
 using ORMSample.Interfaces;
+using DapperSamples;
 
 namespace ORMSample
 {
@@ -23,99 +24,131 @@ namespace ORMSample
 
         public IEnumerable<Product> GetProductsWithCategoryAndSuppliers()
         {
-            var query = $"select * from Northwind.Products as Product" +
-                $" inner join Northwind.Categories as Category on Product.CategoryID = Category.CategoryID" +
-                $" inner join Northwind.Suppliers as Supplier on Product.SupplierID = Supplier.SupplierID";
+            var query = @"select Product.ProductID, Product.ProductName, Product.QuantityPerUnit, Product.UnitPrice,
+                                 Product.UnitsInStock,Product.UnitsOnOrder,Product.ReorderLevel,Product.Discontinued,
+                                 Category.CategoryID, Category.CategoryName, Category.Description, Category.Picture,
+                                 Supplier.SupplierID, Supplier.CompanyName, Supplier.ContactName, Supplier.ContactTitle,
+                                 Supplier.Address, Supplier.City, Supplier.Region, Supplier.PostalCode, Supplier.Country,
+                                 Supplier.Phone, Supplier.Fax, Supplier.HomePage
+                                     from dbo.Products as Product
+                                     inner join dbo.Categories as Category on Product.CategoryID = Category.CategoryID
+                                     inner join dbo.Suppliers as Supplier on Product.SupplierID = Supplier.SupplierID";
 
             IEnumerable<Product> resultProducts = new List<Product>();
 
             using (IDbConnection connection = new SqlConnection(_connectionString))
             {
                 resultProducts = connection.Query<Product, Category, Supplier, Product>(query, (product, category, supplier) =>
-                {
-                    product.Supplier = supplier;
+                {  
                     product.Category = category;
+                    product.Supplier = supplier;
                     return product;
-                }, splitOn: "ProductID, CategoryID, SupplierID");
-
+                }, splitOn: "CategoryID, SupplierID");
             }
             return resultProducts;
         }
 
         public IEnumerable<EmployeeRegion> GetEmployeesWithRegion()
         {
-            string query = @"select emp.EmployeeID, emp.FirstName, reg.RegionID, reg.RegionDescription
-                             from Northwind.Employees as emp  
-                             inner join Northwind.EmployeeTerritories as et on et.EmployeeID = emp.EmployeeID
-                             inner join Northwind.Territories as ter on et.TerritoryID = ter.TerritoryID
-                             inner join Northwind.Regions reg on ter.RegionID = reg.RegionID
-                             group by emp.EmployeeID, emp.FirstName, reg.RegionID, reg.RegionDescription";
-
+            string query = @"select ter.TerritoryID, emp.EmployeeID, emp.FirstName, emp.LastName, emp.Title, emp.TitleOfCourtesy,
+                                    emp.Address, emp.City, emp.Region, emp.PostalCode, emp.Country, emp.BirthDate, emp.HireDate,
+                                    emp.HomePhone,emp.Extension, emp.ReportsTo,
+                                    reg.RegionID, reg.RegionDescription
+                                         from dbo.Employees as emp
+                                         inner join dbo.EmployeeTerritories as eter on emp.EmployeeID = eter.EmployeeID
+                                         inner join dbo.Territories as ter on  eter.TerritoryID = ter.TerritoryID
+                                         inner join dbo.Region as reg on ter.RegionID = reg.RegionID";
             IEnumerable<EmployeeRegion> employeesRegions = new List<EmployeeRegion>();
 
             using (IDbConnection connection =
                 new SqlConnection(_connectionString))
             {
-
-                employeesRegions = connection.Query<EmployeeRegion, Region, EmployeeRegion>(query, (eRegion, region) => {
+                var result  = connection.Query<EmployeeRegion, Employee, Region, EmployeeRegion>(query, (eRegion, emp, region) => {
+                    eRegion.Employee = emp;
                     eRegion.Region = region;
                     return eRegion;
-                }, splitOn: "RegionID");
-
+                }, splitOn: "EmployeeID,RegionID").GroupBy(firstSupplier => firstSupplier.Employee.EmployeeID);
+                employeesRegions = result.Select(firstSupplier => firstSupplier.FirstOrDefault());
             }
             return employeesRegions;
         }
 
         public IEnumerable<EmployeesInRegion> GetAmountOfEmployeesByRegion()
         {
-            string query = @"select Region, count(EmployeeID) as 'EmployeeAmount' from Northwind.Employees group by Region";
+            string query = @"select COUNT(distinct et.EmployeeID) as 'EmployeeAmount',  reg.RegionID, reg.RegionDescription
+                            from dbo.Employees as emp  
+                            inner join dbo.EmployeeTerritories as et on et.EmployeeID = emp.EmployeeID
+                            inner join dbo.Territories as ter on et.TerritoryID = ter.TerritoryID
+                            inner join dbo.Region reg on ter.RegionID = reg.RegionID
+                            group by reg.RegionID, reg.RegionDescription";
             IEnumerable<EmployeesInRegion> employeesInRegion = new List<EmployeesInRegion>();
-            
+
             using (IDbConnection connection = new SqlConnection(_connectionString))
-                employeesInRegion = connection.Query<EmployeesInRegion>(query);
+            {
+                employeesInRegion = connection.Query<EmployeesInRegion, Region, EmployeesInRegion>(query, (result, region) =>
+                {
+                    result.Region = region;
+                    return result;
+                }, splitOn:"RegionID");
+            }
+                
             return employeesInRegion;
         }
 
         public IEnumerable<EmployeeSuppliers> GetEmployeeWithSuppliers()
         {
-            string query = @"select emp.EmployeeID, sup.SupplierID from Northwind.Employees as emp
-                            inner join Northwind.Orders as ord on emp.EmployeeID = ord.EmployeeID
-                            inner join Northwind.[Order Details] as odet on ord.OrderID = odet.OrderID
-                            inner join Northwind.Products as prod on odet.ProductID = prod.ProductID
-                            inner join Northwind.Suppliers as sup on prod.SupplierID = sup.SupplierID";
+            string query = @"select odet.OrderID, 
+                                emp.EmployeeID, emp.FirstName, emp.LastName, emp.Title, emp.TitleOfCourtesy,
+                                emp.Address, emp.City, emp.Region, emp.PostalCode, emp.Country, emp.BirthDate, emp.HireDate,
+                                emp.HomePhone,emp.Extension, emp.ReportsTo,
+                                sup.SupplierID, sup.CompanyName, sup.ContactName, sup.Address, sup.City, sup.Country
+                                    from dbo.Orders as ord 
+                                    inner join dbo.Employees as emp on ord.EmployeeID = emp.EmployeeID
+                                    inner join dbo.[Order Details] as odet on ord.OrderID = odet.OrderID
+                                    inner join dbo.Products as prod on odet.ProductID = prod.ProductID
+                                    inner join dbo.Suppliers as sup on prod.SupplierID = sup.SupplierID";
 
             IEnumerable<EmployeeSuppliers> employeesSuppliers = new List<EmployeeSuppliers>();
-            
+
             using (IDbConnection connection = new SqlConnection(_connectionString))
             {
-                //employeesSuppliers = connection.Query<EmployeeSuppliers, Employee, Supplier, EmployeeSuppliers>(query,
-                //    (employeeSupplier, employee, supplier) =>
-                //    {
-                //        employeeSupplier.Employee = employee;
-                //        employeeSupplier.Suppliers = supplier;
-                //        return employeeSupplier;
-                //    }, splitOn: "EmployeeID,OrderID,ProductID,SupplierID ");
+                var result = connection.Query<EmployeeSupplier, Employee, Supplier, EmployeeSupplier>(query,
+                    (employeeSupplier, employee, supplier) =>
+                    {
+                        employeeSupplier.Employee = employee;
+                        employeeSupplier.Supplier = supplier;
+                        return employeeSupplier;
+                    }, splitOn: "EmployeeID,SupplierID");
 
-                employeesSuppliers = connection.Query<EmployeeSupplier>(query)
-                    .GroupBy(x => x.EmployeeID)
-                    .Select(x => new EmployeeSuppliers() { EmployeeID = x.Key, SuppliersID = x.Select(y => y.SupplierID) });
+                var groupedEmployees = result.GroupBy(esup => esup.Employee.EmployeeID);
+                employeesSuppliers = groupedEmployees.Select(gemp => new EmployeeSuppliers()
+                {
+
+                    Employee = gemp.FirstOrDefault().Employee,
+                    Suppliers = gemp.Select(sup => sup.Supplier).Distinct(new SupplierEqualityComparer())
+                });
             }
             return employeesSuppliers;
-        }
+
+    }
+
+        
 
         public void AddEmployeeWithTerritories(Employee employee)
         {
-            var createEmployeeQuery = @"insert into Northwind.Employees(LastName,FirstName,
+            var createEmployeeQuery = @"insert into dbo.Employees(LastName,FirstName,
                 Title,TitleOfCourtesy,BirthDate,HireDate,Address,City,Region,
                 PostalCode,Country,HomePhone,Extension,Photo,Notes,ReportsTo,PhotoPath) values(@LastName,@FirstName,
                 @Title,@TitleOfCourtesy,@BirthDate,@HireDate,@Address,@City,@Region,
                 @PostalCode,@Country,@HomePhone,@Extension,@Photo,@Notes,@ReportsTo,@PhotoPath)";
 
-            var lastEmployeeQuery = @"select top 1 EmployeeID from Northwind.Employees 
+            var lastEmployeeQuery = @"select top 1 EmployeeID from dbo.Employees 
                                       where FirstName = @FirstName and LastName = @LastName and BirthDate = @BirthDate 
                                       order by EmployeeID desc";
 
-            var setEmployeeTerritoriesQuery = @"insert into Northwind.EmployeeTerritories(EmployeeID, TerritoryID) values(@EmployeeID, @TerritoryID)";
+            var setEmployeeTerritoriesQuery = @"insert into dbo.EmployeeTerritories(EmployeeID, TerritoryID) values(@EmployeeID, @TerritoryID)";
+
+            var territoryGetQuery = "select TerritoryID from dbo.Territories where TerritoryID = @TerritoryID";
 
             using (IDbConnection connection = new SqlConnection(_connectionString))
             {
@@ -146,7 +179,7 @@ namespace ORMSample
                 {
                     foreach (var territory in employee.Territories)
                     {
-                        var isTerritoryExists = connection.Query<int?>("select TerritoryID from Northwind.Territories where TerritoryID = @TerritoryID", new { territory.TerritoryID }).Any();
+                        var isTerritoryExists = connection.Query<int>(territoryGetQuery, new { territory.TerritoryID }).Any();
                         if (isTerritoryExists)
                             connection.Execute(setEmployeeTerritoriesQuery, new { EmployeeID = addedEmployeeId, territory.TerritoryID });
                     }
@@ -157,7 +190,7 @@ namespace ORMSample
 
         public void ChangeProductsCategory(Category currentCategory, Category newCategory)
         {
-            var updateQuery = "update Northwind.Products set CategoryID = @NewCategoryID where CategoryID = @CurrentCategoryID ";
+            var updateQuery = "update dbo.Products set CategoryID = @NewCategoryID where CategoryID = @CurrentCategoryID ";
             using (IDbConnection connection = new SqlConnection(_connectionString))
                 connection.Execute(updateQuery, new { NewCategoryID = newCategory.CategoryID, CurrentCategoryID = currentCategory.CategoryID });
         }
@@ -165,23 +198,26 @@ namespace ORMSample
         public void AddProductsWithSuppliersAndCategories(IEnumerable<Product> products)
         {
 
-            var insertProductQuery = @"insert into Northwind.Products
+            var insertProductQuery = @"insert into dbo.Products
                 (ProductName, SupplierID, CategoryID, QuantityPerUnit, UnitPrice, UnitsInStock, UnitsOnOrder, ReorderLevel, Discontinued)
                 values(@ProductName, @SupplierID, @CategoryID, @QuantityPerUnit, @UnitPrice, @UnitsInStock, @UnitsOnOrder, @ReorderLevel, @Discontinued)";
 
-            var insertCategoryQuery = @"insert into Northwind.Categories(CategoryName, Description, Picture) 
+            var insertCategoryQuery = @"insert into dbo.Categories(CategoryName, Description, Picture) 
                                         values(@CategoryName, @Description, @Picture);
                                         select scope_identity()";
-            var insertSupplierQuery = @"insert into Northwind.Suppliers(CompanyName,ContactName,ContactTitle,Address,City,Region,PostalCode,Country,Phone,Fax,HomePage)
+            var insertSupplierQuery = @"insert into dbo.Suppliers(CompanyName,ContactName,ContactTitle,Address,City,Region,PostalCode,Country,Phone,Fax,HomePage)
                                         values(@CompanyName,@ContactName,@ContactTitle,@Address,@City,@Region,@PostalCode,@Country,@Phone,@Fax,@HomePage);
                                         select scope_identity()";
+
+            var getCategoryByNameQuery = "select CategoryID from dbo.Categories where CategoryName = @CategoryName";
+
+            var getSupplierByNameQuery = "select SupplierID from dbo.Suppliers where ContactName = @SupplierName";
 
             using (IDbConnection connection = new SqlConnection(_connectionString))
             {
                 foreach (var product in products)
                 {
-                    var categoryId = connection.Query<int>("select CategoryID from Northwind.Categories where CategoryName = @CategoryName",
-                        new { product.Category.CategoryName });
+                    var categoryId = connection.Query<int>(getCategoryByNameQuery, new { product.Category.CategoryName });
                     if (!categoryId.Any())
                     {
                         product.CategoryID = connection.Query<int>(insertCategoryQuery, new
@@ -194,8 +230,7 @@ namespace ORMSample
                     else
                         product.CategoryID = categoryId.SingleOrDefault();
 
-                    var supplierId = connection.Query<int>("select SupplierID from Northwind.Suppliers where ContactName = @SupplierName",
-                        new { SupplierName = product.Supplier.ContactName });
+                    var supplierId = connection.Query<int>(getSupplierByNameQuery,  new { SupplierName = product.Supplier.ContactName });
                     if (!supplierId.Any())
                     {
                         product.SupplierID = connection.Query<int>(insertSupplierQuery, new
@@ -238,9 +273,9 @@ namespace ORMSample
 
         public void ReplaceProductWhileOrderNotShipped(Product orderProduct, Product sameProduct)
         {
-            var updateQuery = @"update Northwind.[Order Details] set ProductID = @NewProductID 
+            var updateQuery = @"update dbo.[Order Details] set ProductID = @NewProductID 
                                 where ProductID = @CurrentProductID and
-                                      OrderID in (select OrderID from Northwind.Orders where ShippedDate is null)";
+                                      OrderID in (select OrderID from dbo.Orders where ShippedDate is null)";
 
             using (IDbConnection connection = new SqlConnection(_connectionString))
             {
