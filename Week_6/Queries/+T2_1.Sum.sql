@@ -15,4 +15,4 @@ select count(OrderID) - count(ShippedDate)  as 'Undelivered orders' from Northwi
 
 --3.	По таблице Orders найти количество различных покупателей (CustomerID), сделавших заказы.
 -- Использовать функцию COUNT и не использовать предложения WHERE и GROUP.
-select count(distinct CustomerID) as 'Unique Customers' from Northwind.Northwind.Customers
+select count(distinct  CustomerID) as 'Unique Customers' from Northwind.Northwind.Orders
