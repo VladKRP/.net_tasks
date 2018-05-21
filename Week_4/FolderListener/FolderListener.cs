@@ -99,7 +99,7 @@ namespace FolderListener
              * First with expected file, next with files with Date = 1.1.1601*/
             bool IsNewlyCreatedFile(FileInfoBase file)
             {
-                TimeSpan maxResidual = new TimeSpan(0, 0, 1);
+                TimeSpan maxResidual = new TimeSpan(0, 1, 0);
                 bool isNewlyCreatedFile = false;
                 var residualTime = DateTime.UtcNow.Date - file.CreationTimeUtc.Date;
                 if (residualTime >= TimeSpan.Zero && residualTime <= maxResidual)
@@ -113,7 +113,7 @@ namespace FolderListener
             if (fileInfo.CreationTime.Year != DateTime.Now.Year)
                 return;
 
-            int numberOfRetries = 3;
+            int numberOfRetries = 2;
             var defaultFolder = _folderListenerConfigurations.DefaultFolder;
             string destinationFolderPath = defaultFolder.Path;
             var isFileInProperDirectory = IsFileInProperDirectory(fileInfo, rule);
@@ -142,7 +142,7 @@ namespace FolderListener
             if (!_fileSystem.Directory.Exists(destinationFolderPath))
                 _fileSystem.Directory.CreateDirectory(destinationFolderPath);
 
-            for (int i = 0; i < numberOfRetries; i++)
+            for (int i = 0; i <= numberOfRetries; i++)
             {
                 try
                 {
@@ -157,7 +157,7 @@ namespace FolderListener
                 }
                 catch (IOException exc)//Error when file moved but listener try to find it in source directory
                 {
-                    if (numberOfRetries - 1 == i)
+                    if (numberOfRetries == i)
                         Error?.Invoke(this, new FileListenerArgs() { Message = exc.Message });
                 }
 
