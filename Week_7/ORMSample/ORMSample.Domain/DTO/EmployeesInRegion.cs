@@ -8,7 +8,7 @@ namespace ORMSample.Domain
 {
     public class EmployeesInRegion
     {
-        public string Region { get; set; }
+        public Region Region { get; set; }
 
         public int EmployeeAmount { get; set; }
 
