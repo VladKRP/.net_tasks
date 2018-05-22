@@ -11,7 +11,9 @@ namespace ORMSampleTests
     public class DapperSampleRepositoryTests
     {
         private readonly DapperSampleRepository _dapperQueries;
-        private const string ConnectionString = @"";//required
+        private const string ConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Northwind;Integrated Security=True;
+                                                    Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;
+                                                    ApplicationIntent=ReadWrite;MultiSubnetFailover=False";//required
 
         public DapperSampleRepositoryTests()
         {

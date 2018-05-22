@@ -8,18 +8,17 @@ namespace ORMSample.Domain
 {
     public class EmployeeSupplier
     {
-        public int EmployeeID { get; set; }
+        public Employee Employee { get; set; }
 
-        public int SupplierID { get; set; }
+        public Supplier Supplier { get; set; }
     }
 
 
     public class EmployeeSuppliers
     {
-        public int EmployeeID { get; set; }
         public Employee Employee { get; set; }
 
-        public IEnumerable<int> SuppliersID { get; set; }
+        public IEnumerable<Supplier> Suppliers { get; set; }
     }
 
 }
