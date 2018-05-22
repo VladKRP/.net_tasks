@@ -14,6 +14,9 @@ namespace FolderListener
 
     class FolderListener
     {
+
+        private FileInfoBase _changedFile;
+
         private IFileSystem _fileSystem;
 
         private IEnumerable<FileSystemWatcher> _fileSystemWatchers;
@@ -51,7 +54,7 @@ namespace FolderListener
 
             for (int i = 0; i < watchers.Count(); i++)
             {
-                watchers[i].Changed += OnChange;
+                watchers[i].Changed += new FileSystemEventHandler(OnChange);
                 watchers[i].EnableRaisingEvents = true;
             }
             _fileSystemWatchers = watchers;
@@ -70,20 +73,30 @@ namespace FolderListener
 
         protected virtual void OnChange(object o, FileSystemEventArgs args)
         {
-            var fileInfo = _fileSystem.FileInfo.FromFileName(args.FullPath);
-            if (!IsFileIgnored(fileInfo.Name) && IsNewlyCreatedFile(fileInfo))
+            if(_changedFile == null)
             {
-                FileCreated?.Invoke(this, new FileListenerArgs() { Message = $"\n{messages.FileCreated}\n{messages.FileName}:{fileInfo.Name}\n{messages.FileCreationDate}:{fileInfo.CreationTime}" });
-                if (!fileInfo.Attributes.Equals(FileAttributes.Directory))
+                var fileInfo = _fileSystem.FileInfo.FromFileName(args.FullPath);
+                _changedFile = fileInfo;
+                TimerCallback callback = new TimerCallback((object obj) => {
+                    _changedFile = null;
+                });
+                Timer timer = new Timer(callback);
+                if (!IsFileIgnored(fileInfo.Name) && IsNewlyCreatedFile(fileInfo))
                 {
-                    var passedRule = _folderListenerConfigurations.GetRules()
-                                                                  .FirstOrDefault(rule => new Regex(rule.Template).Match(args.Name).Success);
-                    if (passedRule != null)
-                        MoveFileAccordingRules(fileInfo, passedRule, _fileNameManager.ChangeFileName);
-                    else
-                        MoveFileAccordingRules(fileInfo, changeFileNameFunc: _fileNameManager.ChangeFileName);
+                    FileCreated?.Invoke(this, new FileListenerArgs() { Message = $"\n{messages.FileCreated}\n{messages.FileName}:{fileInfo.Name}\n{messages.FileCreationDate}:{fileInfo.CreationTime}" });
+                    if (!fileInfo.Attributes.Equals(FileAttributes.Directory))
+                    {
+                        var passedRule = _folderListenerConfigurations.GetRules()
+                                                                      .FirstOrDefault(rule => new Regex(rule.Template).Match(args.Name).Success);
+                        if (passedRule != null)
+                            MoveFileAccordingRules(fileInfo, passedRule, _fileNameManager.ChangeFileName);
+                        else
+                            MoveFileAccordingRules(fileInfo, changeFileNameFunc: _fileNameManager.ChangeFileName);
+                    }
                 }
+                timer.Change(1000, 0);
             }
+            
 
             bool IsFileIgnored(string filename)
             {
@@ -150,6 +163,7 @@ namespace FolderListener
                     var destinationFileName = destinationFolderPath + $"\\{resultFileName}";
                     Thread.Sleep(100);
                     File.Move(fileInfo.FullName, destinationFileName);
+                    //Thread.Sleep(100);
                     if (!string.Equals(fileInfo?.Name, resultFileName))
                         FileNameChanged?.Invoke(this, new FileListenerArgs() { Message = $"{messages.FileNameChanged}: {resultFileName}" });
                     FileMoved?.Invoke(this, new FileListenerArgs() { Message = $"{messages.FileMoved} {destinationFolderPath}" });
