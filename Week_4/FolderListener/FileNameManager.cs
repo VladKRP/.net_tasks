@@ -1,6 +1,7 @@
 ﻿using FolderListener.Configurations;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Abstractions;
 using System.Linq;
@@ -48,7 +49,8 @@ namespace FolderListener
             string ChangeFileNameAccordingRule(string filename, DirectoryInfoBase directory, RuleElement ruleElement)
             {
                 if (ruleElement.NameChangeRule.Equals(NameChangeRule.LastModifyDate))
-                    filename += $" {DateTime.Now.ToShortDateString()}";
+                    filename += $" {DateTime.Now.ToString("D",CultureInfo.InvariantCulture)}";
+                    
                 else if (ruleElement.NameChangeRule.Equals(NameChangeRule.SerialNumber))
                     filename = $"{GetNextSerialNumberOfFileInDirectory(directory)}.{filename}";
                 return filename;
