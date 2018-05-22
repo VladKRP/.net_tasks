@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO.Abstractions;
 using FolderListener;
 using FolderListener.Configurations;
@@ -134,7 +135,7 @@ namespace FolderListenerTests
             var result = _fileNameManager.ChangeFileName(file, defaultsFolder, rule);
             
             Assert.IsNotNull(result);
-            Assert.AreEqual($"Ideas {DateTime.Now.ToShortDateString()}.docx", result);
+            Assert.AreEqual($"Ideas {DateTime.Now.ToString("D", CultureInfo.InvariantCulture)}.docx", result);
         }
 
         [TestMethod]
