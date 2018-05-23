@@ -18,7 +18,8 @@ namespace WebSLC
 
         private readonly DomainSwitchParameter _domainSwitchParameter;
 
-        public HtmlLinkManager() {
+        public HtmlLinkManager()
+        {
             _excludedExtensions = new List<string>();
             _domainSwitchParameter = DomainSwitchParameter.WithoutRestrictions;
         }
@@ -47,15 +48,17 @@ namespace WebSLC
                         .Where(link => !IsLinkFormatForbidden(link) && !IsLinkAnchor(link));
         }
 
-        public IEnumerable<string> GetPageLinks(string siteLayout)
+        public IEnumerable<string> GetPageLinks(byte[] siteLayout)
         {
-            var links = GetPageLinkNodes(siteLayout);
+            var layout = Encoding.UTF8.GetString(siteLayout);
+            var links = GetPageLinkNodes(layout);
             return GetUniqueLinksThatPassRestrictions(links);
         }
 
-        public IEnumerable<string> GetPageResourceLink(string siteLayout)
+        public IEnumerable<string> GetPageResourceLink(byte[] siteLayout)
         {
-            var links = GetPageLinkNodes(siteLayout).Where(link => link.Name != "a");
+            var layout = Encoding.UTF8.GetString(siteLayout);
+            var links = GetPageLinkNodes(layout).Where(link => link.Name != "a");
             return GetUniqueLinksThatPassRestrictions(links);
         }
 
@@ -87,12 +90,11 @@ namespace WebSLC
             {
                 if (!string.Equals(baseLink.DnsSafeHost, innerLink.DnsSafeHost))
                     isLinkDomainForbidden = true;
-                else if(string.Equals(baseLink.DnsSafeHost, innerLink.DnsSafeHost) && !innerLink.AbsoluteUri.StartsWith(baseLink.AbsoluteUri))
+                else if (string.Equals(baseLink.DnsSafeHost, innerLink.DnsSafeHost) && !innerLink.AbsolutePath.StartsWith(baseLink.AbsolutePath))
                     isLinkDomainForbidden = true;
             }
 
             return isLinkDomainForbidden;
-
         }
 
         public string ReplaceLinkWebPathToLocalPath(string link, string path = null)
@@ -125,6 +127,13 @@ namespace WebSLC
                 }
             }
             return document.DocumentNode.OuterHtml;
+        }
+
+        public byte[] GetPageWithLocalLinks(Uri url, byte[] resource)
+        {
+            if (!Path.HasExtension(url.OriginalString))
+                resource = Encoding.UTF8.GetBytes(ReplacePageLinksToLocal(resource));
+            return resource;
         }
 
         public string ProcessLink(string domain, string link)

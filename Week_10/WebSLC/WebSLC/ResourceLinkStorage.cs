@@ -7,29 +7,29 @@ namespace WebSLC
 {
     public class ResourceLinkStorage
     {
-        private ICollection<string> _downloadedLinks;
+        private ICollection<Uri> _downloadedLinks;
 
         public ResourceLinkStorage()
         {
-            _downloadedLinks = new List<string>();
+            _downloadedLinks = new List<Uri>();
         }
 
-        public void AddResourceLinkToDownloaded(string link)
+        public void Add(Uri link)
         {
             _downloadedLinks.Add(link);
         }
 
-        public bool IsResourceAlreadyDownloaded(string link)
+        public void Clear()
         {
-            bool isResourceAlreadyDownloaded = false;
-            if (_downloadedLinks.Any(x => x == link))
-                isResourceAlreadyDownloaded = true;
-            return isResourceAlreadyDownloaded;
+            _downloadedLinks = new List<Uri>();
         }
 
-        public void ClearResourceLinkStorage()
+        public bool IsLinkDownloaded(Uri link)
         {
-            _downloadedLinks = new List<string>();
+            bool isResourceAlreadyDownloaded = false;
+            if (_downloadedLinks.Any(x => string.Equals(x.OriginalString, link.OriginalString)))
+                isResourceAlreadyDownloaded = true;
+            return isResourceAlreadyDownloaded;
         }
     }
 }

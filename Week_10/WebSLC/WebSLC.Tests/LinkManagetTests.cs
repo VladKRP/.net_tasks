@@ -9,7 +9,7 @@ namespace WebSLC.Tests
     [TestClass]
     public class LinkManagerTests
     {
-        private const string LayoutWithLinks = @"<!DOCTYPE html>
+        private readonly byte[] LayoutWithLinks = Encoding.Default.GetBytes(@"<!DOCTYPE html>
                                                 <html lang='en'>
                                                     <head>
                                                         <meta charset = 'UTF-8' >
@@ -27,10 +27,10 @@ namespace WebSLC.Tests
                                                         <img src='https://linkmanagertests.com/img/hello/hello.ico'/>
                                                         <script src='https://linkmanagertests.com/scripts/script.js'></script>
                                                     </body>
-                                                </html>";
+                                                </html>");
 
 
-        private const string LayoutWithoutLinks = @"<!DOCTYPE html>
+        private readonly byte[] LayoutWithoutLinks = Encoding.Default.GetBytes(@"<!DOCTYPE html>
                                                 <html lang='en'>
                                                     <head>
                                                         <meta charset = 'UTF-8' >
@@ -40,7 +40,7 @@ namespace WebSLC.Tests
                                                     </head>
                                                      <body>  
                                                     </body>
-                                                </html>";
+                                                </html>");
 
 
         [TestMethod]
