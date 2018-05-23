@@ -4,6 +4,9 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using WebSLC.Args;
+using WebSLC.Interfaces;
+using WebSLC.Models;
 
 namespace WebSLC.Utilily
 {
@@ -11,37 +14,55 @@ namespace WebSLC.Utilily
     {
         static void Main(string[] args)
         {
-            
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
-
-            string[] resources = { "https://www.epam.com/" };
             const string defaultPath = @"D:\CDP\.net_tasks\Week_10\Downloads\";
 
+            Uri[] resources = {
+                                    new Uri("https://www.epam.com/"),
+                                    new Uri("https://www.epam.com/what-we-do/"),
+                                    new Uri("https://habr.com/company/goto/blog/345978/"),
+                              };
 
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
 
-            HtmlLinkManager linkAnalyzer = new HtmlLinkManager(domainSwitchParameter: DomainSwitchParameter.WithoutRestrictions);
+            HtmlLinkManager linkManager = new HtmlLinkManager(domainSwitchParameter: DomainSwitchParameter.WithoutRestrictions);
+            FileSystemWebsiteSave resourceRecorder = new FileSystemWebsiteSave(defaultPath + "test_1\\");
+            WebsiteDownloader downloader = new WebsiteDownloader(linkManager, resourceRecorder);
+            downloader = AddHandlers(downloader);
 
+            downloader.DownloadWebResourceAsync(resources[0], 0).Wait();
 
-            WebsiteDownloader downloader = new WebsiteDownloader(defaultPath, linkAnalyzer);
+            Console.ForegroundColor = ConsoleColor.DarkCyan;
 
-            downloader.WebpageDownloadStarted += (object o, DownloadArgs arg) => System.Console.WriteLine($"\nDownload started\nLink: {arg.Link}\nTime: {arg.Time}\nDepth:{arg.Depth}");
-            downloader.WebpageDownloadCompleted += (object o, DownloadArgs arg) => System.Console.WriteLine($"\nDownload ended\nLink: {arg.Link}\nTime: {arg.Time}\n");
+            linkManager = new HtmlLinkManager(domainSwitchParameter: DomainSwitchParameter.BelowSourceUrlPath);
 
-            downloader.DownloadWebpageAsync(resources[0], 1).Wait();
+            resourceRecorder.DestinationPath = defaultPath + "test_2\\";
+            downloader = new WebsiteDownloader(linkManager, resourceRecorder);
+            downloader = AddHandlers(downloader);
 
-            // downloader.DownloadWebpageAsync(resources[0], 1).Wait();
+            downloader.DownloadWebResourceAsync(resources[1], 1).Wait();
 
-            //string[] excludedFormats = { ".jpg" };
-            //LinkManager linkAnalyzerWithRestrictions = new LinkManager(excludedFormats, DomainSwitchParameter.CurrentDomain);
+            Console.ForegroundColor = ConsoleColor.DarkGreen;
 
-            //WebsiteDownloader downloaderWithRestrictions = new WebsiteDownloader(defaultPath, linkAnalyzerWithRestrictions);
+            string[] excludedFormats = { ".jpg" };
+            resourceRecorder.DestinationPath = defaultPath + "test_3\\";
+            linkManager = new HtmlLinkManager(excludedFormats, DomainSwitchParameter.CurrentDomain);
+            downloader = new WebsiteDownloader(linkManager, resourceRecorder);
+            downloader = AddHandlers(downloader);
 
-            //downloaderWithRestrictions.WebpageDownloadStarted += (object o, DownloadArgs arg) => System.Console.WriteLine($"\nDownload started\nLink: {arg.Link}\nTime: {arg.Time}\nDepth:{arg.Depth}");
-            //downloaderWithRestrictions.WebpageDownloadCompleted += (object o, DownloadArgs arg) => System.Console.WriteLine($"\nDownload ended\nLink: {arg.Link}\nTime: {arg.Time}\n");
-
-            //downloaderWithRestrictions.DownloadWebpageAsync(resources[1], 1).Wait();
+            downloader.DownloadWebResourceAsync(resources[2], 0).Wait();
 
             Console.ReadLine();
+        }
+
+        static WebsiteDownloader AddHandlers(WebsiteDownloader downloader)
+        {
+            downloader.WebpageDownloadStarted += (object o, DownloadArgs arg) =>
+                Console.WriteLine($"\nDownload started\nLink: {arg.Link.OriginalString}\nTime: {arg.Time}\nDepth:{arg.Depth}");
+            downloader.WebpageDownloadCompleted += (object o, DownloadArgs arg) =>
+                Console.WriteLine($"\nDownload ended\nLink: {arg.Link.OriginalString}\nTime: {arg.Time}\n");
+            downloader.Error += (object o, DownloaderErrorArgs arg) =>
+                Console.WriteLine($"\nError - '{arg.ExceptionMessage}' occured during downloading from:\n {arg.Link}");
+            return downloader;
         }
     }
 }

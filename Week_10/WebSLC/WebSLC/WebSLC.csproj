@@ -6,6 +6,16 @@
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.7.4" />
+    <PackageReference Include="System.IO.Abstractions" Version="2.1.0.178" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="WebSLC.Interfaces">
+      <HintPath>..\WebSLC.Interfaces\bin\Debug\WebSLC.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="WebSLC.Models">
+      <HintPath>..\WebSLC.Models\bin\Debug\WebSLC.Models.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

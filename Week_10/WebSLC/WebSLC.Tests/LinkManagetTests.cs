@@ -3,13 +3,22 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using WebSLC.Models;
 
 namespace WebSLC.Tests
 {
     [TestClass]
     public class LinkManagerTests
     {
-        private const string LayoutWithLinks = @"<!DOCTYPE html>
+        private readonly byte[] LayoutWithLinks;
+        private readonly byte[] LayoutWithoutLinks;
+
+        private readonly WebPage pageWithLinks;
+        private readonly WebPage pageWithoutLinks;
+
+        public LinkManagerTests()
+        {
+            LayoutWithLinks = Encoding.Default.GetBytes(@"<!DOCTYPE html>
                                                 <html lang='en'>
                                                     <head>
                                                         <meta charset = 'UTF-8' >
@@ -27,10 +36,8 @@ namespace WebSLC.Tests
                                                         <img src='https://linkmanagertests.com/img/hello/hello.ico'/>
                                                         <script src='https://linkmanagertests.com/scripts/script.js'></script>
                                                     </body>
-                                                </html>";
-
-
-        private const string LayoutWithoutLinks = @"<!DOCTYPE html>
+                                                </html>");
+            LayoutWithoutLinks = Encoding.Default.GetBytes(@"<!DOCTYPE html>
                                                 <html lang='en'>
                                                     <head>
                                                         <meta charset = 'UTF-8' >
@@ -40,8 +47,10 @@ namespace WebSLC.Tests
                                                     </head>
                                                      <body>  
                                                     </body>
-                                                </html>";
-
+                                                </html>");
+            pageWithLinks = new WebPage() { Url = new Uri("https://linkmanagertests.com/"),  Data = LayoutWithLinks };
+            pageWithoutLinks = new WebPage() { Url = new Uri("https://linkmanagertests.com/"), Data = LayoutWithoutLinks };
+        }
 
         [TestMethod]
         public void GetPageLinks_PassNull_ArgumentNullExseption()
@@ -65,7 +74,7 @@ namespace WebSLC.Tests
                 };
             HtmlLinkManager linkManager = new HtmlLinkManager();
 
-            var actualLinks = linkManager.GetPageLinks(LayoutWithLinks).ToList();
+            var actualLinks = linkManager.GetPageLinks(pageWithLinks).ToList();
 
             CollectionAssert.AreEqual(expectedLinks, actualLinks);
         }
@@ -77,7 +86,7 @@ namespace WebSLC.Tests
             var anchor = "#pageanchor";
             HtmlLinkManager linkManager = new HtmlLinkManager();
 
-            var actualLinks = linkManager.GetPageLinks(LayoutWithLinks).ToList();
+            var actualLinks = linkManager.GetPageLinks(pageWithLinks).ToList();
 
             Assert.IsTrue(!actualLinks.Contains(anchor));
         }
@@ -88,7 +97,7 @@ namespace WebSLC.Tests
             var expectedLinks = new List<string>();
             HtmlLinkManager linkManager = new HtmlLinkManager();
 
-            var actualLinks = linkManager.GetPageLinks(LayoutWithoutLinks).ToList();
+            var actualLinks = linkManager.GetPageLinks(pageWithoutLinks).ToList();
 
             CollectionAssert.AreEqual(expectedLinks, actualLinks);
         }
@@ -107,7 +116,7 @@ namespace WebSLC.Tests
             var restrictedFormats = new List<string>() { ".png" };
             HtmlLinkManager linkManager = new HtmlLinkManager(restrictedFormats);
 
-            var actualLinks = linkManager.GetPageLinks(LayoutWithLinks).ToList();
+            var actualLinks = linkManager.GetPageLinks(pageWithLinks).ToList();
 
             CollectionAssert.AreEqual(expectedLinks, actualLinks);
         }
@@ -124,7 +133,7 @@ namespace WebSLC.Tests
             var restrictedFormats = new List<string>() { ".png", ".css" };
             HtmlLinkManager linkManager = new HtmlLinkManager(restrictedFormats);
 
-            var actualLinks = linkManager.GetPageLinks(LayoutWithLinks).ToList();
+            var actualLinks = linkManager.GetPageLinks(pageWithLinks).ToList();
 
             CollectionAssert.AreEqual(expectedLinks, actualLinks);
         }
@@ -151,7 +160,7 @@ namespace WebSLC.Tests
                 };
             HtmlLinkManager linkManager = new HtmlLinkManager();
 
-            var actual = linkManager.GetPageResourceLink(LayoutWithLinks).ToList();
+            var actual = linkManager.GetPageResourceLink(pageWithLinks).ToList();
 
             CollectionAssert.AreEqual(expectedLinks, actual);
         }
@@ -162,7 +171,7 @@ namespace WebSLC.Tests
             var expected = new List<string>();
             HtmlLinkManager linkManager = new HtmlLinkManager();
 
-            var actual = linkManager.GetPageResourceLink(LayoutWithoutLinks).ToList();
+            var actual = linkManager.GetPageResourceLink(pageWithoutLinks).ToList();
 
             CollectionAssert.AreEqual(expected, actual);
         }
@@ -180,7 +189,7 @@ namespace WebSLC.Tests
             IEnumerable<string> forbiddenFormats = new List<string>() { ".png" };
             HtmlLinkManager linkManager = new HtmlLinkManager(forbiddenFormats);
 
-            var actual = linkManager.GetPageResourceLink(LayoutWithLinks).ToList();
+            var actual = linkManager.GetPageResourceLink(pageWithLinks).ToList();
 
             CollectionAssert.AreEqual(expectedLinks, actual);
         }
@@ -196,7 +205,7 @@ namespace WebSLC.Tests
             IEnumerable<string> forbiddenFormats = new List<string>() { ".png", ".css" };
             HtmlLinkManager linkManager = new HtmlLinkManager(forbiddenFormats);
 
-            var actual = linkManager.GetPageResourceLink(LayoutWithLinks).ToList();
+            var actual = linkManager.GetPageResourceLink(pageWithLinks).ToList();
 
             CollectionAssert.AreEqual(expectedLinks, actual);
         }
@@ -341,90 +350,6 @@ namespace WebSLC.Tests
             var result = links.Select(link => linkManager.IsLinkDomainForbidden(baseUrl, link)).ToList();
 
             CollectionAssert.AreEqual(expected, result);
-        }
-
-        [TestMethod]
-        public void ReplaceLinkWebPathToLocalPath_PassLinksAndPath_ReturnLocalLinks()
-        {
-            var links = new List<string>() {
-                "https://linkmanagertests.com/buttons.css",
-                "https://linkmanagertests.com/home",
-                "https://linkmanagertests.com/img/hello/hello.png" ,
-                "https://linkmanagertests.com/scripts/script.js"
-                };
-            var localPath = @"d:/downloads/";
-            string[] expected = {
-                localPath + "buttons.css",
-                localPath + "home.html",
-                localPath + "hello.png",
-                localPath + "script.js"
-            };
-            HtmlLinkManager linkManager = new HtmlLinkManager();
-
-            var result = links.Select(link => linkManager.ReplaceLinkWebPathToLocalPath(link, localPath)).ToList();
-
-            CollectionAssert.AreEqual(expected, result);
-        }
-
-        [TestMethod]
-        public void ReplaceLinkWebPathToLocalPath_PassLinks_ReturnLocalLinks()
-        {
-            var links = new List<string>() {
-                "https://linkmanagertests.com/buttons.css",
-                "https://linkmanagertests.com/home",
-                "https://linkmanagertests.com/img/hello/hello.png" ,
-                "https://linkmanagertests.com/scripts/script.js"
-                };
-            string[] expected = {
-                "buttons.css",
-                "home.html",
-                "hello.png",
-                "script.js"
-            };
-            HtmlLinkManager linkManager = new HtmlLinkManager();
-
-            var result = links.Select(link => linkManager.ReplaceLinkWebPathToLocalPath(link)).ToList();
-
-            CollectionAssert.AreEqual(expected, result);
-        }
-
-        [TestMethod]
-        public void ReplacePageLinksToLocal_PassPageWithWebLinks_ReturnPageWithLocalLinks()
-        {
-            var localPath = @"d:/downloads/";
-            var layoutWithLocalLinks = @"<!DOCTYPE html>
-                                                <html lang='en'>
-                                                    <head>
-                                                        <meta charset = 'UTF-8' >
-                                                        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-                                                        <meta http-equiv='X-UA-Compatible' content='ie=edge'>
-                                                        <link rel='stylesheet' href='" + localPath + @"index.css'>
-                                                        <link rel='stylesheet' href='" + localPath + @"buttons.css'>
-                                                        <title>Document</title>
-                                                    </head>
-                                                     <body>
-                                                        <a href='" + localPath + @"home.html'>Home</a>
-                                                        <a href='#pageanchor'>anchor</a>
-                                                        <img src='" + localPath + @"hello.png'>
-                                                        <img src='" + localPath + @"hello.jpg'>
-                                                        <img src='" + localPath + @"hello.ico'>
-                                                        <script src='" + localPath + @"script.js'></script>
-                                                    </body>
-                                                </html>";
-            var binaryLayout = Encoding.Default.GetBytes(layoutWithLocalLinks);
-
-            var expected = RemoveSpacingCharacters(layoutWithLocalLinks);
-            HtmlLinkManager linkManager = new HtmlLinkManager();
-
-            var result = linkManager.ReplacePageLinksToLocal(binaryLayout, localPath);
-            var actual = RemoveSpacingCharacters(result);
-
-            Assert.AreEqual(expected, actual);
-
-            string RemoveSpacingCharacters(string layout)
-            {
-                return layout.Where(x => !char.IsWhiteSpace(x) && x != '\n' && x != '\r').Aggregate("", (x, y) => x += y);
-            }
         }
     }
 }

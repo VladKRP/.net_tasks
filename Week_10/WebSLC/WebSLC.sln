@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSLC.Utilily", "WebSLC.Ut
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSLC.Tests", "WebSLC.Tests\WebSLC.Tests.csproj", "{02AB16D2-891E-4C8A-A3D2-491B62063BD0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSLC.Interfaces", "WebSLC.Interfaces\WebSLC.Interfaces.csproj", "{12FE2F8C-A55A-42FB-8D77-A0F01CD5754F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebSLC.Models", "WebSLC.Models\WebSLC.Models.csproj", "{37E0D4E5-0ADA-43BE-8F1F-343CB1AC893F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{02AB16D2-891E-4C8A-A3D2-491B62063BD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{02AB16D2-891E-4C8A-A3D2-491B62063BD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{02AB16D2-891E-4C8A-A3D2-491B62063BD0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12FE2F8C-A55A-42FB-8D77-A0F01CD5754F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12FE2F8C-A55A-42FB-8D77-A0F01CD5754F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12FE2F8C-A55A-42FB-8D77-A0F01CD5754F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12FE2F8C-A55A-42FB-8D77-A0F01CD5754F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{37E0D4E5-0ADA-43BE-8F1F-343CB1AC893F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{37E0D4E5-0ADA-43BE-8F1F-343CB1AC893F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{37E0D4E5-0ADA-43BE-8F1F-343CB1AC893F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{37E0D4E5-0ADA-43BE-8F1F-343CB1AC893F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
