@@ -20,7 +20,6 @@ namespace WebSLC.Utilily
                                     new Uri("https://www.epam.com/"),
                                     new Uri("https://www.epam.com/what-we-do/"),
                                     new Uri("https://habr.com/company/goto/blog/345978/"),
-                                    new Uri("https://msdn.microsoft.com/ru-ru/library/zdtaw1bw(v=vs.110).aspx")
                               };
 
             Console.ForegroundColor = ConsoleColor.DarkYellow;
@@ -52,15 +51,6 @@ namespace WebSLC.Utilily
 
             downloader.DownloadWebResourceAsync(resources[2], 0).Wait();
 
-            Console.ForegroundColor = ConsoleColor.DarkMagenta;
-
-            resourceRecorder.DestinationPath = defaultPath + "test_4\\";
-            linkManager = new HtmlLinkManager(domainSwitchParameter: DomainSwitchParameter.WithoutRestrictions);
-            downloader = new WebsiteDownloader(linkManager, resourceRecorder);
-            downloader = AddHandlers(downloader);
-
-            downloader.DownloadWebResourceAsync(resources[3], 1).Wait();
-
             Console.ReadLine();
         }
 
@@ -70,7 +60,7 @@ namespace WebSLC.Utilily
                 Console.WriteLine($"\nDownload started\nLink: {arg.Link.OriginalString}\nTime: {arg.Time}\nDepth:{arg.Depth}");
             downloader.WebpageDownloadCompleted += (object o, DownloadArgs arg) =>
                 Console.WriteLine($"\nDownload ended\nLink: {arg.Link.OriginalString}\nTime: {arg.Time}\n");
-            downloader.DownloadError += (object o, DownloadErrorArgs arg) =>
+            downloader.Error += (object o, DownloaderErrorArgs arg) =>
                 Console.WriteLine($"\nError - '{arg.ExceptionMessage}' occured during downloading from:\n {arg.Link}");
             return downloader;
         }

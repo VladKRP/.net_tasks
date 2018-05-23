@@ -4,7 +4,7 @@ using System.Text;
 
 namespace WebSLC.Args
 {
-    public class DownloadErrorArgs: EventArgs
+    public class DownloaderErrorArgs: EventArgs
     {
         public Uri Link { get; set; }
 

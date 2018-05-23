@@ -24,7 +24,7 @@ namespace WebSLC
 
         public EventHandler<DownloadArgs> WebpageDownloadStarted { get; set; }
         public EventHandler<DownloadArgs> WebpageDownloadCompleted { get; set; }
-        public EventHandler<DownloadErrorArgs> DownloadError { get; set; }
+        public EventHandler<DownloaderErrorArgs> Error { get; set; }
 
         public WebsiteDownloader(HtmlLinkManager linkManager, IWebResourceSave resourceRecorder, ILinkStorage linkStorage = null)
         {
@@ -50,10 +50,19 @@ namespace WebSLC
                     if(webPage != null)
                         webResource = _linkManager.GetPageWithLocalLinks(webPage);
 
-                    _resourceRecorder.Save(webResource);
+                    try
+                    {
+                        _resourceRecorder.Save(webResource);
+                    }
+                    catch(PathTooLongException exc)
+                    {
+                        Error?.Invoke(this, new DownloaderErrorArgs() { Link = url, ExceptionMessage = exc.Message });
+                    }
 
                     if(webPage != null)
                     {
+                        webPage.Data = downloadedResource;
+
                         if (depth == 0)
                         {
                             var pageLinks = _linkManager.GetPageResourceLink(webPage);
@@ -68,7 +77,7 @@ namespace WebSLC
                 }
                 catch(HttpRequestException exc)
                 {
-                    DownloadError?.Invoke(this, new DownloadErrorArgs() { Link = url, ExceptionMessage = exc.Message });
+                    Error?.Invoke(this, new DownloaderErrorArgs() { Link = url, ExceptionMessage = exc.Message });
                 } 
             }
         }

@@ -89,16 +89,19 @@ namespace WebSLC
         public bool IsLinkDomainForbidden(Uri baseLink, Uri innerLink)
         {
             bool isLinkDomainForbidden = false;
-
-            if (DomainSwitchParameter.CurrentDomain.Equals(_domainSwitchParameter) && !string.Equals(baseLink.DnsSafeHost, innerLink.DnsSafeHost))
-                isLinkDomainForbidden = true;
-
-            else if (DomainSwitchParameter.BelowSourceUrlPath.Equals(_domainSwitchParameter))
+            if (!Path.HasExtension(innerLink.OriginalString))
             {
-                if (!string.Equals(baseLink.DnsSafeHost, innerLink.DnsSafeHost))
+                if (DomainSwitchParameter.CurrentDomain.Equals(_domainSwitchParameter) && !string.Equals(baseLink.DnsSafeHost, innerLink.DnsSafeHost))
                     isLinkDomainForbidden = true;
-                else if (string.Equals(baseLink.DnsSafeHost, innerLink.DnsSafeHost) && !innerLink.AbsolutePath.StartsWith(baseLink.AbsolutePath))
-                    isLinkDomainForbidden = true;
+
+                else if (DomainSwitchParameter.BelowSourceUrlPath.Equals(_domainSwitchParameter))
+                {
+
+                    if (!string.Equals(baseLink.DnsSafeHost, innerLink.DnsSafeHost))
+                        isLinkDomainForbidden = true;
+                    else if (string.Equals(baseLink.DnsSafeHost, innerLink.DnsSafeHost) && !innerLink.AbsolutePath.StartsWith(baseLink.AbsolutePath))
+                        isLinkDomainForbidden = true;
+                }
             }
 
             return isLinkDomainForbidden;
@@ -150,7 +153,7 @@ namespace WebSLC
                 processedLinks = links.Select(link => ProcessLink(domain, link)).Where(link => link != null);
             return processedLinks;
         }
-        
+
         private string ProcessLink(string domain, string link)
         {
             string httpPrefix = "http";
@@ -159,12 +162,14 @@ namespace WebSLC
             {
                 if (link.StartsWith("//"))
                     result = $"{httpPrefix}:" + link;
+                if (link.StartsWith("/"))
+                    result = $"{httpPrefix}://{domain}{link}";
                 else if (link.StartsWith(httpPrefix))
                     result = link;
                 else
                     result = $"{httpPrefix}://{domain}/{link}";
             }
             return result;
-        } 
+        }
     }
 }
