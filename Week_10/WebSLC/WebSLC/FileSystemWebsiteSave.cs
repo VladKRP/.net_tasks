@@ -4,36 +4,51 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using WebSLC.Interfaces;
 using WebSLC.Models;
 
 namespace WebSLC
 {
-    public class FileSystemWebsiteSave
+    public class FileSystemWebsiteSave: IWebResourceSave
     {
+        public string DestinationPath { get; set; }
 
-        public string CreateLocalFileName(Uri url, byte[] resource)
+        public FileSystemWebsiteSave(string path)
         {
-            Regex fileNameCorrectingRegEx = new Regex("[/\\:?*\"<>|]+");
-            var layout = Encoding.Default.GetString(resource);
-
-            var filename = "";
-            if (HtmlAnalyzer.IsLayoutContainHtmlTag(layout))
-                filename = CreateLocalFileNameForWebpage(url, layout);
-            else
-                filename = CreateLocalFileNameForResource(url);
-            return DestinationPath + fileNameCorrectingRegEx.Replace(filename, "_");
+            DestinationPath = path;
         }
 
-        private string CreateLocalFileNameForWebpage(Uri url, string layout)
+        public void Save(WebResourceBase entity)
+        {
+            var localpath = CreateLocalPath(entity);
+            using (FileStream fileStream = new FileStream(localpath, FileMode.Create, FileAccess.Write))
+                fileStream.Write(entity.Data, 0, entity.Data.Length);
+        }
+
+        private string CreateLocalPath(WebResourceBase entity)
+        {
+            Regex fileNameCorrectingRegEx = new Regex("[/\\:?*\"<>|]+");
+            var filename = "";
+            var webEntity = entity as WebPage;
+
+            if(webEntity != null)
+                filename = CreateLocalFileNameForWebpage(webEntity);
+            else
+                filename = CreateLocalFileNameForResource(entity.Url);
+  
+            return DestinationPath + fileNameCorrectingRegEx.Replace(filename, "_");   
+        }
+
+        private string CreateLocalFileNameForWebpage(WebPage page)
         {
             string htmlPageFormat = ".html";
             string filename = "";
 
-            var pageName = url.Segments.Last().Trim('\\', '.', ',', ' ', '/');
+            var pageName = page.Url.Segments.Last().Trim('\\', '.', ',', ' ', '/');
             if (!string.IsNullOrEmpty(pageName) && pageName != "/")
                 filename = pageName;
             else
-                filename = HtmlAnalyzer.GetHtmlPageTitle(layout);
+                filename = HtmlAnalyzer.GetHtmlPageTitle(page.Layout);
             return filename + htmlPageFormat;
         }
 
@@ -48,12 +63,5 @@ namespace WebSLC
                 filename = fileNameWithoutExtension.Trim('\\', '.', ',', ' ', '/') + Path.GetExtension(url.OriginalString);
             return filename;
         }
-
-        public void Save(byte[] resource)
-        {
-            using (FileStream fileStream = new FileStream(DestinationPath, FileMode.Create, FileAccess.Write))
-                fileStream.Write(resource, 0, resource.Length);
-        }
-
     }
 }

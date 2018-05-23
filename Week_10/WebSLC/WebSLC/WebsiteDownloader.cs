@@ -9,6 +9,8 @@ using System.Text.RegularExpressions;
 using System.Net;
 using System.Text;
 using WebSLC.Args;
+using WebSLC.Interfaces;
+using WebSLC.Models;
 
 namespace WebSLC
 {
@@ -16,60 +18,53 @@ namespace WebSLC
     {
         private readonly HtmlLinkManager _linkManager;
 
-        private readonly ResourceLinkStorage _resourceLinkStorage;
+        private readonly ILinkStorage _resourceLinkStorage;
 
-        private readonly FileSystemWebsiteSave _websiteSave;
-
-        private readonly string _path;
+        private readonly IWebResourceSave _resourceRecorder;
 
         public EventHandler<DownloadArgs> WebpageDownloadStarted { get; set; }
         public EventHandler<DownloadArgs> WebpageDownloadCompleted { get; set; }
         public EventHandler<DownloadErrorArgs> DownloadError { get; set; }
 
-        public WebsiteDownloader(string path, HtmlLinkManager linkManager, FileSystemWebsiteSave websiteSave = null, ResourceLinkStorage linkStorage = null)
+        public WebsiteDownloader(HtmlLinkManager linkManager, IWebResourceSave resourceRecorder, ILinkStorage linkStorage = null)
         {
-            _resourceLinkStorage = linkStorage ?? new ResourceLinkStorage();
-            _websiteSave = websiteSave ?? new FileSystemWebsiteSave();
-            _path = path;
+            _resourceLinkStorage = linkStorage ?? new MemoryLinkStorage();
+            _resourceRecorder = resourceRecorder;
             _linkManager = linkManager;
-            
         }
 
-        public async Task DownloadWebpageAsync(Uri url, int depth = 0)
+        public async Task DownloadWebResourceAsync(Uri url, int depth = 0)
         {
-            if (depth >= 0 && !_resourceLinkStorage.IsLinkDownloaded(url))
+            if (depth >= 0 && !_resourceLinkStorage.Exists(url))
             {
                 WebpageDownloadStarted.Invoke(this, new DownloadArgs() { Link = url, Depth = depth, Time = DateTime.Now });
                 try
                 {
-                    byte[] downloadedPage = await DownloadPageAsync(url);
+                    byte[] downloadedResource = await DownloadResourceAsync(url);
                     WebpageDownloadCompleted.Invoke(this, new DownloadArgs() { Link = url, Depth = depth, Time = DateTime.Now });
 
                     _resourceLinkStorage.Add(url);
 
-                    var localWebsite = _linkManager.GetPageWithLocalLinks(url, downloadedPage);
-                    var localPath = _websiteSave.CreateLocalFileName(url, _path, downloadedPage);
-                    _websiteSave.Save(localPath, localWebsite);
+                    var webResource = WebResourceBaseFactory.Create(url, downloadedResource);
+                    var webPage = webResource as WebPage;
+                    if(webPage != null)
+                        webResource = _linkManager.GetPageWithLocalLinks(webPage);
 
-                    if (depth == 0)
-                    {
-                        var pageLinks = _linkManager.GetPageResourceLink(downloadedPage);
-                        if (pageLinks.Any())
-                        {
-                            pageLinks = _linkManager.ProcessLinks(url.DnsSafeHost, pageLinks);
-                            await DownloadWebpageResourcesAsync(pageLinks, url, 1);
-                        }
+                    _resourceRecorder.Save(webResource);
 
-                    }
-                    else if (depth > 0)
+                    if(webPage != null)
                     {
-                        var pageLinks = _linkManager.GetPageLinks(downloadedPage);
-                        if (pageLinks.Any())
+                        if (depth == 0)
                         {
-                            pageLinks = _linkManager.ProcessLinks(url.DnsSafeHost, pageLinks);
-                            await DownloadWebpageResourcesAsync(pageLinks, url, depth);
+                            var pageLinks = _linkManager.GetPageResourceLink(webPage);
+                            await DownloadInnerWebResourcesAsync(pageLinks, url, 1);
                         }
-                    }
+                        else if (depth > 0)
+                        {
+                            var pageLinks = _linkManager.GetPageLinks(webPage);
+                            await DownloadInnerWebResourcesAsync(pageLinks, url, depth);
+                        }
+                    }                
                 }
                 catch(HttpRequestException exc)
                 {
@@ -78,17 +73,20 @@ namespace WebSLC
             }
         }
 
-        private async Task DownloadWebpageResourcesAsync(IEnumerable<string> pageLinks, Uri baseUri, int depth)
+        private async Task DownloadInnerWebResourcesAsync(IEnumerable<string> pageLinks, Uri baseUri, int depth)
         {
-            foreach (var link in pageLinks)
+            if (pageLinks.Any())
             {
-                var linkUri = new Uri(link);
-                if (!_linkManager.IsLinkDomainForbidden(baseUri, linkUri))
-                    await DownloadWebpageAsync(new Uri(link), depth - 1);
-            }
+                foreach (var link in pageLinks)
+                {
+                    var linkUri = new Uri(link);
+                    if (!_linkManager.IsLinkDomainForbidden(baseUri, linkUri))
+                        await DownloadWebResourceAsync(new Uri(link), depth - 1);
+                }
+            }         
         }
 
-        private async Task<byte[]> DownloadPageAsync(Uri url)
+        private async Task<byte[]> DownloadResourceAsync(Uri url)
         {
             byte[] page = { };
 

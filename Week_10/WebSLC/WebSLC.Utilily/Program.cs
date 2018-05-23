@@ -5,6 +5,8 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using WebSLC.Args;
+using WebSLC.Interfaces;
+using WebSLC.Models;
 
 namespace WebSLC.Utilily
 {
@@ -12,37 +14,52 @@ namespace WebSLC.Utilily
     {
         static void Main(string[] args)
         {
-            
-            Console.ForegroundColor = ConsoleColor.DarkYellow;
-
-            Uri[] resources = { new Uri("https://www.epam.com/"),
-                                new Uri("https://www.epam.com/what-we-do/"),
-                                new Uri("https://habr.com/company/goto/blog/345978/") };
             const string defaultPath = @"D:\CDP\.net_tasks\Week_10\Downloads\";
 
+            Uri[] resources = {
+                                    new Uri("https://www.epam.com/"),
+                                    new Uri("https://www.epam.com/what-we-do/"),
+                                    new Uri("https://habr.com/company/goto/blog/345978/"),
+                                    new Uri("https://msdn.microsoft.com/ru-ru/library/zdtaw1bw(v=vs.110).aspx")
+                              };
+
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
+
             HtmlLinkManager linkManager = new HtmlLinkManager(domainSwitchParameter: DomainSwitchParameter.WithoutRestrictions);
-            WebsiteDownloader downloader = new WebsiteDownloader(defaultPath + "test_1\\", linkManager);
+            FileSystemWebsiteSave resourceRecorder = new FileSystemWebsiteSave(defaultPath + "test_1\\");
+            WebsiteDownloader downloader = new WebsiteDownloader(linkManager, resourceRecorder);
             downloader = AddHandlers(downloader);
 
-            downloader.DownloadWebpageAsync(resources[0], 0).Wait();
+            downloader.DownloadWebResourceAsync(resources[0], 0).Wait();
 
             Console.ForegroundColor = ConsoleColor.DarkCyan;
 
             linkManager = new HtmlLinkManager(domainSwitchParameter: DomainSwitchParameter.BelowSourceUrlPath);
 
-            downloader = new WebsiteDownloader(defaultPath + "test_2\\", linkManager);
+            resourceRecorder.DestinationPath = defaultPath + "test_2\\";
+            downloader = new WebsiteDownloader(linkManager, resourceRecorder);
             downloader = AddHandlers(downloader);
 
-            downloader.DownloadWebpageAsync(resources[1], 1).Wait();
+            downloader.DownloadWebResourceAsync(resources[1], 1).Wait();
 
             Console.ForegroundColor = ConsoleColor.DarkGreen;
 
             string[] excludedFormats = { ".jpg" };
+            resourceRecorder.DestinationPath = defaultPath + "test_3\\";
             linkManager = new HtmlLinkManager(excludedFormats, DomainSwitchParameter.CurrentDomain);
-            downloader = new WebsiteDownloader(defaultPath + "test_3\\", linkManager);
+            downloader = new WebsiteDownloader(linkManager, resourceRecorder);
             downloader = AddHandlers(downloader);
 
-            downloader.DownloadWebpageAsync(resources[2], 0).Wait();
+            downloader.DownloadWebResourceAsync(resources[2], 0).Wait();
+
+            Console.ForegroundColor = ConsoleColor.DarkMagenta;
+
+            resourceRecorder.DestinationPath = defaultPath + "test_4\\";
+            linkManager = new HtmlLinkManager(domainSwitchParameter: DomainSwitchParameter.WithoutRestrictions);
+            downloader = new WebsiteDownloader(linkManager, resourceRecorder);
+            downloader = AddHandlers(downloader);
+
+            downloader.DownloadWebResourceAsync(resources[3], 1).Wait();
 
             Console.ReadLine();
         }

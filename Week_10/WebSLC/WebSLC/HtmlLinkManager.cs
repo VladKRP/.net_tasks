@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System.IO;
+using WebSLC.Models;
 
 namespace WebSLC
 {
@@ -31,10 +32,10 @@ namespace WebSLC
             _domainSwitchParameter = domainSwitchParameter;
         }
 
-        private IEnumerable<HtmlNode> GetPageLinkNodes(string siteLayout)
+        private IEnumerable<HtmlNode> GetPageLinkNodes(WebPage page)
         {
             HtmlDocument document = new HtmlDocument();
-            document.LoadHtml(siteLayout);
+            document.LoadHtml(page.Layout);
             return document.DocumentNode.Descendants()
                                         .Where(desc => _linkElements.Any(lelem => lelem == desc.Name));
         }
@@ -48,18 +49,24 @@ namespace WebSLC
                         .Where(link => !IsLinkFormatForbidden(link) && !IsLinkAnchor(link));
         }
 
-        public IEnumerable<string> GetPageLinks(byte[] siteLayout)
+        public IEnumerable<string> GetPageLinks(WebPage page)
         {
-            var layout = Encoding.UTF8.GetString(siteLayout);
-            var links = GetPageLinkNodes(layout);
-            return GetUniqueLinksThatPassRestrictions(links);
+            if (page == null)
+                throw new ArgumentNullException("Page must be not null.");
+
+            var pageLinks = GetPageLinkNodes(page);
+            var uniqueLinks = GetUniqueLinksThatPassRestrictions(pageLinks);
+            return ProcessLinks(page.Url.DnsSafeHost, uniqueLinks);
         }
 
-        public IEnumerable<string> GetPageResourceLink(byte[] siteLayout)
+        public IEnumerable<string> GetPageResourceLink(WebPage page)
         {
-            var layout = Encoding.UTF8.GetString(siteLayout);
-            var links = GetPageLinkNodes(layout).Where(link => link.Name != "a");
-            return GetUniqueLinksThatPassRestrictions(links);
+            if (page == null)
+                throw new ArgumentNullException("Page must be not null.");
+
+            var pageLinks = GetPageLinkNodes(page).Where(link => link.Name != "a");
+            var uniqueLinks = GetUniqueLinksThatPassRestrictions(pageLinks);
+            return ProcessLinks(page.Url.DnsSafeHost, uniqueLinks);
         }
 
         public bool IsLinkFormatForbidden(string link)
@@ -97,7 +104,7 @@ namespace WebSLC
             return isLinkDomainForbidden;
         }
 
-        public string ReplaceLinkWebPathToLocalPath(string link, string path = null)
+        private string ReplaceLinkWebPathToLocalPath(string link, string path = null)
         {
             if (IsLinkAnchor(link))
                 return link;
@@ -108,7 +115,7 @@ namespace WebSLC
             return path + filename;
         }
 
-        public string ReplacePageLinksToLocal(byte[] siteLayout, string path = null)
+        private string ReplacePageLinksToLocal(byte[] siteLayout, string path = null)
         {
             var document = new HtmlDocument();
             var stringLayout = Encoding.UTF8.GetString(siteLayout);
@@ -129,34 +136,35 @@ namespace WebSLC
             return document.DocumentNode.OuterHtml;
         }
 
-        public byte[] GetPageWithLocalLinks(Uri url, byte[] resource)
+        public WebPage GetPageWithLocalLinks(WebPage page)
         {
-            if (!Path.HasExtension(url.OriginalString))
-                resource = Encoding.UTF8.GetBytes(ReplacePageLinksToLocal(resource));
-            return resource;
+            if (!Path.HasExtension(page.Url.OriginalString))
+                page.Data = Encoding.UTF8.GetBytes(ReplacePageLinksToLocal(page.Data));
+            return page;
         }
 
-        public string ProcessLink(string domain, string link)
-        {
-            string result = null;
-            if (!string.IsNullOrEmpty(link))
-            {
-                if (link.StartsWith("//"))
-                    result = "http:" + link;
-                else if (link.StartsWith("/"))
-                    result = "http://" + domain + link;
-                else if (link.StartsWith("http"))
-                    result = link;
-            }
-            return result;
-        }
-
-        public IEnumerable<string> ProcessLinks(string domain, IEnumerable<string> links)
+        private IEnumerable<string> ProcessLinks(string domain, IEnumerable<string> links)
         {
             IEnumerable<string> processedLinks = Enumerable.Empty<string>();
             if (links.Any())
                 processedLinks = links.Select(link => ProcessLink(domain, link)).Where(link => link != null);
             return processedLinks;
         }
+        
+        private string ProcessLink(string domain, string link)
+        {
+            string httpPrefix = "http";
+            string result = null;
+            if (!string.IsNullOrEmpty(link))
+            {
+                if (link.StartsWith("//"))
+                    result = $"{httpPrefix}:" + link;
+                else if (link.StartsWith(httpPrefix))
+                    result = link;
+                else
+                    result = $"{httpPrefix}://{domain}/{link}";
+            }
+            return result;
+        } 
     }
 }
