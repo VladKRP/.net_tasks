@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="FileAlreadyInProperFolder" xml:space="preserve">
+    <value>File already placed in proper directory</value>
+  </data>
   <data name="FileChangeRules" xml:space="preserve">
     <value>Change file name rules</value>
   </data>
@@ -146,5 +149,23 @@
   </data>
   <data name="RuleNotMatched" xml:space="preserve">
     <value>File did not match with template</value>
+  </data>
+  <data name="ConfigurationArgumentNullException" xml:space="preserve">
+    <value>FolderListenerConfigurationSection cannot be null</value>
+  </data>
+  <data name="NoWatchersException" xml:space="preserve">
+    <value>No FileSystemWatchers configured to listen your folders.</value>
+  </data>
+  <data name="NoWatchersExceptionDescription" xml:space="preserve">
+    <value>Such situation can appear when configuration file do not contain folders pathes to listen.</value>
+  </data>
+  <data name="NoWatchersExceptionResolveCases" xml:space="preserve">
+    <value>Check project configuration file on section folderListenerConfigurationSection and folder pathes in it. While you not found such section or it empty, add section or folder pathes. </value>
+  </data>
+  <data name="ListeningStarted" xml:space="preserve">
+    <value>Folder listening started</value>
+  </data>
+  <data name="FileNameChanged" xml:space="preserve">
+    <value>File name changed</value>
   </data>
 </root>

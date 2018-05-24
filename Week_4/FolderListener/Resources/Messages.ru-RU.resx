@@ -127,4 +127,25 @@
   <data name="FileLastMovingDate" xml:space="preserve">
     <value>Добавлять дату изменения к названию файла?</value>
   </data>
+  <data name="FileAlreadyInProperFolder" xml:space="preserve">
+    <value>Файл уже находится в необходимой папке</value>
+  </data>
+  <data name="ConfigurationArgumentNullException" xml:space="preserve">
+    <value>FolderListenerConfigurationSection должно быть не null</value>
+  </data>
+  <data name="NoWatchersException" xml:space="preserve">
+    <value>Нет FileSystemWatchers прослушивающих папки</value>
+  </data>
+  <data name="NoWatchersExceptionDescription" xml:space="preserve">
+    <value>Следующая ситуация может возникнуть в случае, если конфигурационный файл не содержит путей к папкам для прослушивания</value>
+  </data>
+  <data name="NoWatchersExceptionResolveCases" xml:space="preserve">
+    <value>Проверьте конфигурационный файл проекта на наличие секции folderListenerConfigurationSection. Если такой секции нет, либо она пуста, добавьте секцию (папки для прослушивания)</value>
+  </data>
+  <data name="ListeningStarted" xml:space="preserve">
+    <value>Прослушивание папок запущено</value>
+  </data>
+  <data name="FileNameChanged" xml:space="preserve">
+    <value>Имя фала изменено</value>
+  </data>
 </root>

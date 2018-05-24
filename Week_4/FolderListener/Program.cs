@@ -1,13 +1,7 @@
 ﻿using FolderListener.Configurations;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Globalization;
-using messages = FolderListener.Resources.Messages;
-using System.Threading;
-using System.IO.Abstractions;
 using System.Configuration;
 
 namespace FolderListener
@@ -17,7 +11,7 @@ namespace FolderListener
 
         static void Main(string[] args)
         {
-            Console.ForegroundColor = ConsoleColor.DarkCyan;
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
 
             const string configSectionName = "folderListenerConfigurationSection";
 
@@ -28,27 +22,31 @@ namespace FolderListener
                 CultureInfo.DefaultThreadCurrentCulture = culture;
                 CultureInfo.DefaultThreadCurrentUICulture = culture;
 
-                FolderListener folderListener = new FolderListener(folderListenerConfigurations);
+                try
+                {
+                    FolderListener folderListener = new FolderListener(folderListenerConfigurations);
 
-                folderListener.FileCreated += OnActivity;
-                folderListener.FileMoved += OnActivity;
-                folderListener.RuleMatch += OnActivity;
-                folderListener.RuleNotMatch += OnActivity;
-                folderListener.Error += OnActivity;
+                    folderListener.ListeningStarted += OnActivity;
+                    folderListener.FileCreated += OnActivity;
+                    folderListener.FileMoved += OnActivity;
+                    folderListener.FileNameChanged += OnActivity;
+                    folderListener.RuleMatch += OnActivity;
+                    folderListener.RuleNotMatch += OnActivity;
+                    folderListener.Error += OnActivity;
 
-                folderListener.Listen();
-                while (true) {
-                    var userInput = Console.ReadKey();
-                    if (IsBreakCondition(userInput))
-                        break;
+                    folderListener.Listen();
                 }
+                catch(FolderListenerException exc)
+                {
+                    Console.WriteLine(exc.Message + $"\n{exc.Description}\n{exc.ResolveCases}");
+                }
+                catch(Exception exc)
+                {
+                    Console.WriteLine(exc.Message);
+                }
+                
+                Console.ReadLine();
             }
-        }
-
-        static bool IsBreakCondition(ConsoleKeyInfo keyInfo)
-        {
-            return keyInfo.Modifiers == ConsoleModifiers.Control && keyInfo.Key == ConsoleKey.C ||
-                   keyInfo.Modifiers == ConsoleModifiers.Control && keyInfo.Key == ConsoleKey.Pause;
         }
 
         static void OnActivity(object o, FileListenerArgs args) => Console.WriteLine(args.Message);
