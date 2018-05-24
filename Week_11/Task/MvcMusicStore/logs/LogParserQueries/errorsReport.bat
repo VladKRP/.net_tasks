@@ -1,0 +1,1 @@
+"C:\Program Files (x86)\Log Parser 2.2\LogParser.exe" -i:TSV -iSeparator:space -headerRow:OFF -o:TSV "select Field1 as date, Field2 as time, Field3 as level, Field4 as message into 'ErrorReport.log' from D:\CDP\.net_tasks\Week_11\Task\MvcMusicStore\logs\2018-05-24.log where level = 'ERROR'"

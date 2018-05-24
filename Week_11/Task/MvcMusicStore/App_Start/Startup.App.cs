@@ -4,6 +4,10 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using MvcMusicStore.Models;
 using Owin;
+using Ninject;
+using NLog;
+using System.Web.Mvc;
+using Ninject.Web.Mvc;
 
 namespace MvcMusicStore
 {
@@ -22,6 +26,10 @@ namespace MvcMusicStore
             }
 
             CreateAdminUser().Wait();
+
+            var kernel = new StandardKernel();
+            kernel.Bind<ILogger>().ToConstant(LogManager.GetCurrentClassLogger());
+            DependencyResolver.SetResolver(new NinjectDependencyResolver(kernel));
         }
 
         private async Task CreateAdminUser()

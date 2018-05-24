@@ -1,9 +1,14 @@
-﻿using System.Data.Entity;
+﻿using System;
+using System.Data.Entity;
+using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using System.Web.Mvc;
 using MvcMusicStore.Models;
 using MvcMusicStore.ViewModels;
+using Ninject;
+using NLog;
 
 namespace MvcMusicStore.Controllers
 {
@@ -11,9 +16,24 @@ namespace MvcMusicStore.Controllers
     {
         private readonly MusicStoreEntities _storeContext = new MusicStoreEntities();
 
+        private readonly ILogger _logger;
+
+        public ShoppingCartController(){}
+
+        [Inject]
+        public ShoppingCartController(ILogger logger)
+        {
+            _logger = logger;
+        }
+
         // GET: /ShoppingCart/
         public async Task<ActionResult> Index()
         {
+
+        #if DEBUG
+            _logger?.Debug($"Index action of controller {this.GetType().Name} invoked");
+        #endif
+
             var cart = ShoppingCart.GetCart(_storeContext, this);
 
             var viewModel = new ShoppingCartViewModel
@@ -28,11 +48,17 @@ namespace MvcMusicStore.Controllers
         // GET: /ShoppingCart/AddToCart/5
         public async Task<ActionResult> AddToCart(int id)
         {
+
+        #if DEBUG
+            _logger?.Debug($"AddToCart action of controller {this.GetType().Name} invoked");
+        #endif
+            
             var cart = ShoppingCart.GetCart(_storeContext, this);
 
             await cart.AddToCart(await _storeContext.Albums.SingleAsync(a => a.AlbumId == id));
 
             await _storeContext.SaveChangesAsync();
+            _logger?.Info($"Album with id {id} added to cart. Cart count equals {await cart.GetCount()}");
 
             return RedirectToAction("Index");
         }
@@ -41,6 +67,11 @@ namespace MvcMusicStore.Controllers
         [HttpPost]
         public async Task<ActionResult> RemoveFromCart(int id)
         {
+
+        #if DEBUG
+            _logger?.Debug($"RemoveFromCart action of controller {this.GetType().Name} invoked");
+        #endif
+
             var cart = ShoppingCart.GetCart(_storeContext, this);
 
             var albumName = await _storeContext.Carts
@@ -51,6 +82,7 @@ namespace MvcMusicStore.Controllers
             var itemCount = await cart.RemoveFromCart(id);
 
             await _storeContext.SaveChangesAsync();
+            _logger.Info($"Album with id {id} removed from cart.Cart count {await cart.GetCount()}");
 
             var removed = (itemCount > 0) ? " 1 copy of " : string.Empty;
 
@@ -69,6 +101,11 @@ namespace MvcMusicStore.Controllers
         [ChildActionOnly]
         public ActionResult CartSummary()
         {
+
+        #if DEBUG
+            _logger?.Debug($"CartSummary action of controller {this.GetType().Name} invoked");
+        #endif
+
             var cart = ShoppingCart.GetCart(_storeContext, this);
 
             var cartItems = cart.GetCartItems()

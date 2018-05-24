@@ -4,7 +4,9 @@ using System.Web.Mvc;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.Owin.Security;
+using MvcMusicStore.Infrastructure;
 using MvcMusicStore.Models;
+using PerformanceCounterHelper;
 
 namespace MvcMusicStore.Controllers
 {
@@ -18,13 +20,19 @@ namespace MvcMusicStore.Controllers
             RemoveLoginSuccess,
             Error
         }
-
         private const string XsrfKey = "XsrfId";
 
         private UserManager<ApplicationUser> _userManager;
 
+        private static CounterHelper<UserLoginCounter> _loginCounter;
+
+        static AccountController()
+        {
+            _loginCounter = PerformanceHelper.CreateCounterHelper<UserLoginCounter>("Login Counter");
+        }
+
         public AccountController()
-            : this(new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext())))
+           : this(new UserManager<ApplicationUser>(new UserStore<ApplicationUser>(new ApplicationDbContext())))
         {
         }
 
@@ -71,10 +79,11 @@ namespace MvcMusicStore.Controllers
                 if (user != null)
                 {
                     await SignInAsync(user, model.RememberMe);
-
+                    _loginCounter.Increment(UserLoginCounter.LogIn);
                     return RedirectToLocal(returnUrl);
                 }
 
+                _loginCounter.Increment(UserLoginCounter.Error);
                 ModelState.AddModelError("", "Invalid username or password.");
             }
 
@@ -104,7 +113,7 @@ namespace MvcMusicStore.Controllers
 
                     return RedirectToAction("Index", "Home");
                 }
-
+               
                 AddErrors(result);
             }
 
@@ -318,7 +327,7 @@ namespace MvcMusicStore.Controllers
         public ActionResult LogOff()
         {
             AuthenticationManager.SignOut();
-
+            _loginCounter.Increment(UserLoginCounter.LogOff);
             return RedirectToAction("Index", "Home");
         }
 

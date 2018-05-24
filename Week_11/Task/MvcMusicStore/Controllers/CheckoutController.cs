@@ -37,9 +37,11 @@ namespace MvcMusicStore.Controllers
                 await ShoppingCart.GetCart(_storeContext, this).CreateOrder(order);
 
                 await _storeContext.SaveChangesAsync();
+                
 
                 return RedirectToAction("Complete", new { id = order.OrderId });
             }
+            
 
             return View(order);
         }
