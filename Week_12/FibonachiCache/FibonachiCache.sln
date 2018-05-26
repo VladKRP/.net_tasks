@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2037
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FibonachiCache", "FibonachiCache.csproj", "{592A636F-9649-4EAB-9235-DB766B845220}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{592A636F-9649-4EAB-9235-DB766B845220}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{592A636F-9649-4EAB-9235-DB766B845220}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{592A636F-9649-4EAB-9235-DB766B845220}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{592A636F-9649-4EAB-9235-DB766B845220}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EDA23017-F846-4843-BE0B-4C2F0DA9F06A}
+	EndGlobalSection
+EndGlobal
