@@ -18,10 +18,7 @@ namespace CachingSolutionsSamples
 	public class CacheTests
 	{
         private const string redisHostname = "localhost";
-        //private const string mssqlConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Northwind;
-        //                                                Integrated Security=True;Encrypt=False;User ID=monitor;password=123
-        //                                                TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-        private const string mssqlConnectionString = @"Server=EPBYBREW0300\SQLEXPRESS;Database=Northwind;User ID=monitor;password=123";
+        private const string connectionString = @"Server=;Database=Northwind;User ID=;password=";
         public CacheTests()
         {
             //Redis_CacheCleanup();
@@ -30,7 +27,7 @@ namespace CachingSolutionsSamples
         [TestMethod]
 		public void MemoryCache_Categories()
 		{
-            using (var tableDependency = new SqlTableDependency<Category>(mssqlConnectionString, "Categories", "Northwind"))
+            using (var tableDependency = new SqlTableDependency<Category>(connectionString, "Categories", "Northwind"))
             {
                 using (var manager = new NorthwindCacheManager<Category>(new GeneralInMemoryCache<Category>(), tableDependency))
                 {
