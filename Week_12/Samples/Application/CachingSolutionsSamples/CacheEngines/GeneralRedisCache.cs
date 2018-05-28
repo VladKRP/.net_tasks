@@ -12,7 +12,7 @@ using System.Xml;
 
 namespace CachingSolutionsSamples.CacheEngines
 {
-    class GeneralRedisCache<T> : IRedisCache<T>
+    class GeneralRedisCache<T> : ICache<T>
     {
         private readonly ConnectionMultiplexer redisConnection;
         private readonly string prefix;

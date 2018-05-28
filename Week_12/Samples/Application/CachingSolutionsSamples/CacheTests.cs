@@ -7,6 +7,10 @@ using CachingSolutionsSamples.Managers;
 using CachingSolutionsSamples.CacheEngines;
 using System.Runtime.Caching;
 using System.Data.SqlClient;
+using TableDependency.SqlClient;
+using TableDependency.EventArgs;
+using System.Collections.Generic;
+using TableDependency.Abstracts;
 
 namespace CachingSolutionsSamples
 {
@@ -14,10 +18,10 @@ namespace CachingSolutionsSamples
 	public class CacheTests
 	{
         private const string redisHostname = "localhost";
-        private const string mssqlConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Northwind;
-                                                        Integrated Security=True;Encrypt=False;
-                                                        TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
-
+        //private const string mssqlConnectionString = @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=Northwind;
+        //                                                Integrated Security=True;Encrypt=False;User ID=monitor;password=123
+        //                                                TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
+        private const string mssqlConnectionString = @"Server=EPBYBREW0300\SQLEXPRESS;Database=Northwind;User ID=monitor;password=123";
         public CacheTests()
         {
             //Redis_CacheCleanup();
@@ -26,100 +30,85 @@ namespace CachingSolutionsSamples
         [TestMethod]
 		public void MemoryCache_Categories()
 		{
-            
-            string sqlQuery = "select CategoryID, CategoryName, Description, Picture from dbo.Categories";
-         
-            using (SqlConnection sqlConnection = new SqlConnection(mssqlConnectionString))
+            using (var tableDependency = new SqlTableDependency<Category>(mssqlConnectionString, "Categories", "Northwind"))
             {
-                using (SqlCommand sqlCommand = new SqlCommand(sqlQuery, sqlConnection))
+                using (var manager = new NorthwindCacheManager<Category>(new GeneralInMemoryCache<Category>(), tableDependency))
                 {
-                    sqlCommand.Notification = null;
-
-                    SqlDependency sqlDependency = new SqlDependency(sqlCommand);
-                    SqlDependency.Start(mssqlConnectionString);
-
-                    sqlConnection.Open();
-                    var executionResult = sqlCommand.ExecuteScalar();
-
-                    SqlChangeMonitor sqlChangeMonitor = new SqlChangeMonitor(sqlDependency);
-
-                    var manager = new NorthwindMemoryCacheManager<Category>(new GeneralInMemoryCache<Category>(), sqlChangeMonitor);
                     CacheRunner<Category>(manager);
-
-                    //SqlDependency.Stop(mssqlConnectionString);
-                    //sqlConnection.Close();    
-
-                }   
+                }
+                    
             }
         }
+
+       
 
         [TestMethod]
         public void MemoryCache_Products()
         {
-            var manager = new NorthwindMemoryCacheManager<Product>(new GeneralInMemoryCache<Product>(), DateTime.UtcNow.AddSeconds(5));
+            var manager = new NorthwindCacheManager<Product>(new GeneralInMemoryCache<Product>(), DateTime.UtcNow.AddSeconds(10));
             CacheRunner(manager);
         }
 
         [TestMethod]
         public void MemoryCache_Orders()
         {
-            var manager = new NorthwindMemoryCacheManager<Order>(new GeneralInMemoryCache<Order>());
+            var manager = new NorthwindCacheManager<Order>(new GeneralInMemoryCache<Order>());
             CacheRunner(manager);
         }
 
         [TestMethod]
         public void MemoryCache_Employee()
         {
-            var manager = new NorthwindMemoryCacheManager<Employee>(new GeneralInMemoryCache<Employee>());
+            var manager = new NorthwindCacheManager<Employee>(new GeneralInMemoryCache<Employee>());
             CacheRunner(manager);
         }
 
         [TestMethod]
 		public void RedisCache_Categories()
 		{
-			var manager = new NorthwindRedisCacheManager<Category>(new GeneralRedisCache<Category>(redisHostname), DateTime.UtcNow.AddSeconds(10));
+			var manager = new NorthwindCacheManager<Category>(new GeneralRedisCache<Category>(redisHostname), DateTime.UtcNow.AddSeconds(10));
             CacheRunner(manager);
 		}
 
         [TestMethod]
         public void RedisCache_Products()
         {
-            var manager = new NorthwindRedisCacheManager<Product>(new GeneralRedisCache<Product>(redisHostname));
+            var manager = new NorthwindCacheManager<Product>(new GeneralRedisCache<Product>(redisHostname));
             CacheRunner(manager);
         }
 
         [TestMethod]
         public void RedisCache_Orders()
         {
-            var manager = new NorthwindRedisCacheManager<Order>(new GeneralRedisCache<Order>(redisHostname));
+            var manager = new NorthwindCacheManager<Order>(new GeneralRedisCache<Order>(redisHostname));
             CacheRunner(manager);
         }
 
         [TestMethod]
         public void RedisCache_Customers()
         {
-            var manager = new NorthwindRedisCacheManager<Customer>(new GeneralRedisCache<Customer>(redisHostname));
+            var manager = new NorthwindCacheManager<Customer>(new GeneralRedisCache<Customer>(redisHostname));
             CacheRunner(manager);
         }
 
         [TestMethod]
         public void RedisCache_Employees()
         {
-            var manager = new NorthwindRedisCacheManager<Employee>(new GeneralRedisCache<Employee>(redisHostname));
+            var manager = new NorthwindCacheManager<Employee>(new GeneralRedisCache<Employee>(redisHostname));
             CacheRunner(manager);
         }
 
         private void Redis_CacheCleanup()
         {
-            var employeeManager = new NorthwindRedisCacheManager<Employee>(new GeneralRedisCache<Employee>(redisHostname));
+            var employeeManager = new NorthwindCacheManager<Employee>(new GeneralRedisCache<Employee>(redisHostname));
             employeeManager.DeleteAll();
-            var customerManager = new NorthwindRedisCacheManager<Customer>(new GeneralRedisCache<Customer>(redisHostname));
+            var customerManager = new NorthwindCacheManager<Customer>(new GeneralRedisCache<Customer>(redisHostname));
             customerManager.DeleteAll();
-            var orderManager = new NorthwindRedisCacheManager<Order>(new GeneralRedisCache<Order>(redisHostname));
+            var orderManager = new NorthwindCacheManager<Order>(new GeneralRedisCache<Order>(redisHostname));
             orderManager.DeleteAll();
-            var productManager = new NorthwindRedisCacheManager<Product>(new GeneralRedisCache<Product>(redisHostname));
+            var productManager = new NorthwindCacheManager<Product>(new GeneralRedisCache<Product>(redisHostname));
             productManager.DeleteAll();
-            var categoryManager = new NorthwindRedisCacheManager<Category>(new GeneralRedisCache<Category>(redisHostname));
+            var categoryManager = new NorthwindCacheManager<Category>(new GeneralRedisCache<Category>(redisHostname));
             categoryManager.DeleteAll();
         }
 

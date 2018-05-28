@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CachingSolutionsSamples.CacheEngines
 {
-    class GeneralInMemoryCache<T>: IMemoryCache<T>
+    class GeneralInMemoryCache<T>: ICache<T>
     {
         private readonly ObjectCache cache;
         private readonly string prefix;
