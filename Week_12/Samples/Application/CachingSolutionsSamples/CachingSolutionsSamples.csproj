@@ -57,6 +57,15 @@
     <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.XML" />
+    <Reference Include="TableDependency, Version=7.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SqlTableDependency.7.3.0\lib\TableDependency.dll</HintPath>
+    </Reference>
+    <Reference Include="TableDependency.SqlClient, Version=7.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SqlTableDependency.7.3.0\lib\TableDependency.SqlClient.dll</HintPath>
+    </Reference>
+    <Reference Include="TableDependency.SqlClient.Where, Version=7.3.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\SqlTableDependency.7.3.0\lib\TableDependency.SqlClient.Where.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Choose>
     <When Condition="('$(VisualStudioVersion)' == '10.0' or '$(VisualStudioVersion)' == '') and '$(TargetFrameworkVersion)' == 'v3.5'">
@@ -72,14 +81,11 @@
   </Choose>
   <ItemGroup>
     <Compile Include="CacheEngines\GeneralInMemoryCache.cs" />
-    <Compile Include="CacheEngines\IMemoryCache.cs" />
-    <Compile Include="CacheEngines\IRedisCache.cs" />
     <Compile Include="Managers\IManager.cs" />
-    <Compile Include="Managers\NorthwindMemoryCacheManager.cs" />
+    <Compile Include="Managers\NorthwindCacheManager.cs" />
     <Compile Include="CacheEngines\GeneralRedisCache.cs" />
     <Compile Include="CacheEngines\ICache.cs" />
     <Compile Include="CacheTests.cs" />
-    <Compile Include="Managers\NorthwindRedisCacheManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -92,7 +98,9 @@
       <Name>NorthwindLibrary</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="dbConfigQuery.sql" />
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
