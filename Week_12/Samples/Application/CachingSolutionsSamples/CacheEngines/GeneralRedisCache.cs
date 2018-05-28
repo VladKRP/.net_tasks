@@ -14,7 +14,7 @@ namespace CachingSolutionsSamples.CacheEngines
 {
     class GeneralRedisCache<T> : ICache<T>
     {
-        private readonly ConnectionMultiplexer redisConnection;
+        private readonly IConnectionMultiplexer redisConnection;
         private readonly string prefix;
         private readonly DataContractSerializer serializer;
 

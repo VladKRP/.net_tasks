@@ -3,6 +3,7 @@ using NorthwindLibrary;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Caching;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,26 +24,27 @@ namespace CachingSolutionsSamples.Managers
 
         public NorthwindCacheManager(ICache<T> cache)
         {
-            _cache = cache;
+            _cache = cache ?? throw new ArgumentNullException("Cannot manage null value cache");
         }
 
         public NorthwindCacheManager(ICache<T> cache, DateTime cacheExpiryDate)
         {
-            _cache = cache;
+            _cache = cache ?? throw new ArgumentNullException("Cannot manage null value cache");
             _cacheExpiryDate = cacheExpiryDate;
         }
 
         public NorthwindCacheManager(ICache<T> cache, ITableDependency<T> tableDependency)
         {
-            _cache = cache;
-            _tableDependency = tableDependency;
+
+            _cache = cache ?? throw new ArgumentNullException("Cannot manage null value cache"); ;
+            _tableDependency = tableDependency ?? throw new ArgumentNullException("Cannot check changes on database with null value argument");
             _tableDependency.OnChanged += _tableDependency_OnChanged;
             _tableDependency.Start();
 
             void _tableDependency_OnChanged(object sender, RecordChangedEventArgs<T> e)
             {
                 _cache.Delete(user);
-                Console.WriteLine("Table changed");
+                Console.WriteLine("Table changed");//for test
             }
         }
 
@@ -53,7 +55,6 @@ namespace CachingSolutionsSamples.Managers
             if (entities == null)
             {
                 Console.WriteLine("From DB");//for test
-
                 using (var context = new Northwind())
                 {
                     context.Configuration.LazyLoadingEnabled = false;
@@ -70,8 +71,9 @@ namespace CachingSolutionsSamples.Managers
 
         public void DeleteAll()
         {
-            if (_cache.Get(user) != null)
-                _cache.Delete(user);
+                if (_cache.Get(user) != null)
+                    _cache.Delete(user);
+            
         }
 
         private bool disposed = false;
