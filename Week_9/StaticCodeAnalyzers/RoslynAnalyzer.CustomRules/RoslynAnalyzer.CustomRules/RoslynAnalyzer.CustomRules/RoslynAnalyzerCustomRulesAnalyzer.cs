@@ -16,46 +16,60 @@ namespace RoslynAnalyzer.CustomRules
         public const string DiagnosticId = "RoslynAnalyzerCustomRules";
         private const string Category = "Naming";
 
-        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create<DiagnosticDescriptor>(); } }
+        //private static readonly LocalizableString Title = new LocalizableResourceString(nameof(Resources.AnalyzerTitle), Resources.ResourceManager, typeof(Resources));
+        //private static readonly LocalizableString MessageFormat = new LocalizableResourceString(nameof(Resources.AnalyzerMessageFormat), Resources.ResourceManager, typeof(Resources));
+        //private static readonly LocalizableString Description = new LocalizableResourceString(nameof(Resources.AnalyzerDescription), Resources.ResourceManager, typeof(Resources));
+        //private static DiagnosticDescriptor Rule = new DiagnosticDescriptor(DiagnosticId, Title, MessageFormat, Category, DiagnosticSeverity.Warning, isEnabledByDefault: true, description: Description);
+
+        private static readonly string ControllerNamingTitle = "Controller inherited from System.Web.Mvc.Controller must contain suffix 'Controller'";
+        private static DiagnosticDescriptor ControllerNamingRule = new DiagnosticDescriptor(
+                    DiagnosticId,
+                    ControllerNamingTitle,
+                    ControllerNamingTitle,
+                    Category,
+                    DiagnosticSeverity.Warning,
+                     true,
+                     "Add suffix 'Controller' to class name"
+            );
+
+
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get { return ImmutableArray.Create(ControllerNamingRule); } }
 
         public override void Initialize(AnalysisContext context)
         {
-            context.RegisterSymbolAction(AnalyzeControllerPostfix, SymbolKind.NamedType);
+            //context.RegisterSymbolAction(AnalyzeSymbol, SymbolKind.NamedType);
+            context.RegisterSymbolAction(AnalyzeControllerSuffix, SymbolKind.NamedType);
             context.RegisterSymbolAction(AnalyzeAuthorizedController, SymbolKind.NamedType);
             context.RegisterSymbolAction(AnalyzeEntities, SymbolKind.NamedType);
         }
 
-        private static void AnalyzeControllerPostfix(SymbolAnalysisContext context)
+        //private static void AnalyzeSymbol(SymbolAnalysisContext context)
+        //{
+        //    // TODO: Replace the following code with your own analysis, generating Diagnostic objects for any issues you find
+        //    var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
+
+        //    // Find just those named type symbols with names containing lowercase letters.
+        //    if (namedTypeSymbol.Name.ToCharArray().Any(char.IsLower))
+        //    {
+        //        // For all such symbols, produce a diagnostic.
+        //        var diagnostic = Diagnostic.Create(Rule, namedTypeSymbol.Locations[0], namedTypeSymbol.Name);
+
+        //        context.ReportDiagnostic(diagnostic);
+        //    }
+        //}
+
+
+        private static void AnalyzeControllerSuffix(SymbolAnalysisContext context)
         {
             var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
             var mvcController = context.Compilation.GetTypeByMetadataName("System.Web.Mvc.Controller");
 
-            if (!IsClassNameInheritedFromMvcControllerEndsWithController(namedTypeSymbol,mvcController))
+            if (namedTypeSymbol.BaseType.Equals(mvcController) && !namedTypeSymbol.Name.EndsWith("Controller"))
             {
-                var diagnosticRule = GetDiagnosticRuleForControllerThatNotEndsWithControllerPostfix(namedTypeSymbol);
-                context.ReportDiagnostic(diagnosticRule);
+                var diagnostic = Diagnostic.Create(ControllerNamingRule, namedTypeSymbol.Locations[0], namedTypeSymbol.Name);
+                context.ReportDiagnostic(diagnostic);
             }
         }
-
-        private static bool IsClassNameInheritedFromMvcControllerEndsWithController(INamedTypeSymbol namedTypeSymbol, INamedTypeSymbol mvcController)
-        {
-            return namedTypeSymbol.BaseType.Equals(mvcController) && namedTypeSymbol.Name.EndsWith("Controller");
-        }
-
-        private static Diagnostic GetDiagnosticRuleForControllerThatNotEndsWithControllerPostfix(INamedTypeSymbol namedTypeSymbol)
-        {
-            return Diagnostic.Create(new DiagnosticDescriptor(
-                        DiagnosticId,
-                        "Controller inherited from System.Web.Mvc.Controller must contain suffix 'Controller'",
-                        "Controller inherited from System.Web.Mvc.Controller must contain suffix 'Controller'",
-                        Category,
-                        DiagnosticSeverity.Warning,
-                         true,
-                         "Add suffix 'Controller' to class name"), 
-                     namedTypeSymbol.Locations[0],
-                     namedTypeSymbol.Name
-            );
-    }
 
         private static void AnalyzeAuthorizedController(SymbolAnalysisContext context)
         {
@@ -68,10 +82,19 @@ namespace RoslynAnalyzer.CustomRules
                 var isCompletelyAuthorizedController = IsControllerOrAllHisMethodsHasAttribute(namedTypeSymbol, authorizeAttribute);
                 if (!isCompletelyAuthorizedController)
                 {
-                    var diagnosticRule = GetDiagnosticRuleForControllerThatNotAuthorizedCompletely(namedTypeSymbol);
-                    context.ReportDiagnostic(diagnosticRule);
+                    var diagnostic = Diagnostic.Create(new DiagnosticDescriptor(DiagnosticId,
+                        "Controller or all controller methods must marked with attribute [Authorize]",
+                        "Controller or all controller methods must marked with attribute [Authorize]",
+                        Category,
+                        DiagnosticSeverity.Warning,
+                         true
+                        ), namedTypeSymbol.Locations[0], namedTypeSymbol.Name);
+                    context.ReportDiagnostic(diagnostic);
                 }
             }
+
+
+
         }
 
         private static bool IsControllerOrAllHisMethodsHasAttribute(INamedTypeSymbol symbol, INamedTypeSymbol attribute)
@@ -81,22 +104,11 @@ namespace RoslynAnalyzer.CustomRules
             else
             {
                 var controllerMethods = symbol.GetMembers().Where(member => member.Kind == SymbolKind.Method && member.MetadataName != ".ctor");
-                if (controllerMethods.Any(method => !IsSymbolHasAttribute(method, attribute)))
-                    return false;
+                if (controllerMethods.All(method => IsSymbolHasAttribute(method, attribute)))
+                    return true;
             }
-            return true;
+            return false;
         }
-
-        private static Diagnostic GetDiagnosticRuleForControllerThatNotAuthorizedCompletely(INamedTypeSymbol namedTypeSymbol)
-        {
-            return Diagnostic.Create(new DiagnosticDescriptor(DiagnosticId,
-                        "Controller or all controller methods must marked with attribute [Authorize]",
-                        "Controller or all controller methods must marked with attribute [Authorize]",
-                        Category,
-                        DiagnosticSeverity.Warning,
-                         true
-                        ), namedTypeSymbol.Locations[0], namedTypeSymbol.Name);
-        }  
 
         private static bool IsSymbolHasAttribute(ISymbol symbol, INamedTypeSymbol attribute)
         {
@@ -109,83 +121,48 @@ namespace RoslynAnalyzer.CustomRules
         private static void AnalyzeEntities(SymbolAnalysisContext context)
         {
             var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
-            if (IsEntitiesNamespace(namedTypeSymbol))
+            if (namedTypeSymbol.ContainingNamespace.Name.Equals("Entities"))
             {
-                if (!IsPublicEntity(namedTypeSymbol))
+                if (namedTypeSymbol.DeclaredAccessibility != Accessibility.Public)
                 {
-                    var diagnosticRule = GetDiagnosticRuleForNonPublicEntity(namedTypeSymbol);
-                    context.ReportDiagnostic(diagnosticRule);
-                }
-                
-                if (!IsEntityContainIdAndNameProperties(namedTypeSymbol))
-                {
-                    var diagnosticRule = GetDiagnosticRuleForEntityWithoutIdAndName(namedTypeSymbol);
-                    context.ReportDiagnostic(diagnosticRule);
-                }
-
-                var dataContractAttribute = context.Compilation.GetTypeByMetadataName("System.Runtime.Serialization.DataContractAttribute");
-                if (!IsSymbolHasAttribute(namedTypeSymbol, dataContractAttribute))
-                {
-                    var diagnosticRule = GetDiagnosticRuleForEntityWithoutDataContractAttribute(namedTypeSymbol);
-                    context.ReportDiagnostic(diagnosticRule);
-                }
-            }
-        }
-
-        private static bool IsEntitiesNamespace(INamedTypeSymbol namedTypeSymbol)
-        {
-            return namedTypeSymbol.ContainingNamespace.Name.Equals("Entities");
-        }
-
-        private static bool IsPublicEntity(INamedTypeSymbol namedTypeSymbol)
-        {
-            return namedTypeSymbol.DeclaredAccessibility == Accessibility.Public;
-        }
-
-        private static Diagnostic GetDiagnosticRuleForNonPublicEntity(INamedTypeSymbol namedTypeSymbol)
-        {
-            return Diagnostic.Create(new DiagnosticDescriptor(DiagnosticId,
+                    var diagnostic = Diagnostic.Create(new DiagnosticDescriptor(DiagnosticId,
                            "Entity type must be public",
                            "Entity type must be public",
                            Category,
                            DiagnosticSeverity.Warning,
                             true
                            ), namedTypeSymbol.Locations[0], namedTypeSymbol.Name);
-        }
+                    context.ReportDiagnostic(diagnostic);
+                }
 
-        private static IEnumerable<string> GetEntityProperties(INamedTypeSymbol namedTypeSymbol)
-        {
-            return namedTypeSymbol.GetMembers()
-                                  .Where(member => member.Kind == SymbolKind.Property)
-                                  .Select(property => property.Name);
-        }
-
-        private static bool IsEntityContainIdAndNameProperties(INamedTypeSymbol namedTypeSymbol)
-        {
-            var entityProperties = GetEntityProperties(namedTypeSymbol);
-            return entityProperties.Contains("Id") && entityProperties.Contains("Name");
-        }
-
-        private static Diagnostic GetDiagnosticRuleForEntityWithoutIdAndName(INamedTypeSymbol namedTypeSymbol)
-        {
-            return Diagnostic.Create(new DiagnosticDescriptor(DiagnosticId,
+                var entityProperties = namedTypeSymbol.GetMembers()
+                                                      .Where(member => member.Kind == SymbolKind.Property).Select(property => property.Name);
+                if (!entityProperties.Contains("Id") || !entityProperties.Contains("Name"))
+                {
+                    var diagnostic = Diagnostic.Create(new DiagnosticDescriptor(DiagnosticId,
                           "Entity must has Id and Name properties",
                           "Entity must has Id and Name properties",
                           Category,
                           DiagnosticSeverity.Warning,
                            true
                           ), namedTypeSymbol.Locations[0], namedTypeSymbol.Name);
-        }
+                    context.ReportDiagnostic(diagnostic);
+                }
 
-        private static Diagnostic GetDiagnosticRuleForEntityWithoutDataContractAttribute(INamedTypeSymbol namedTypeSymbol)
-        {
-            return Diagnostic.Create(new DiagnosticDescriptor(DiagnosticId,
+                var dataContractAttribute = context.Compilation.GetTypeByMetadataName("System.Runtime.Serialization.DataContractAttribute");
+                if (!IsSymbolHasAttribute(namedTypeSymbol, dataContractAttribute))
+                {
+                    var diagnostic = Diagnostic.Create(new DiagnosticDescriptor(DiagnosticId,
                           "Entity must has attribute [DataContractAttribute]",
                           "Entity must has attribute [DataContractAttribute]",
                           Category,
                           DiagnosticSeverity.Warning,
                            true
                           ), namedTypeSymbol.Locations[0], namedTypeSymbol.Name);
+                    context.ReportDiagnostic(diagnostic);
+                }
+            }
         }
+
     }
 }
