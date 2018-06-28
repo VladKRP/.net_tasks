@@ -16,7 +16,7 @@
     <tags>Hospital Domain CDP NugetPackageSample</tags>
   </metadata>
   <files>
-    <file src="HospitalStartup.html" target=""></file>
+    <file src="HospitalStartup.html" target="content"></file>
     <file src="Install.ps1" target="tools"></file>
   </files>
 </package>

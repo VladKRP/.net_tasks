@@ -1,5 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <configuration xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform" xdt:Transform="Insert">
-  <appSettings xdt:Transform="Insert">
-  </appSettings>
+  <configSections xdt:Transform="InsertIfMissing">
+    <sectionGroup >
+      <section name="security" requirePermission="false" type="Elmah.SecuritySectionHandler, Elmah" />
+    </sectionGroup>
+  </configSections>
 </configuration>
